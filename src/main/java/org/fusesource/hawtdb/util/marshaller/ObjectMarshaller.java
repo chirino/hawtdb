@@ -28,7 +28,7 @@ import java.io.ObjectOutputStream;
  * Implementation of a Marshaller for Objects
  * 
  */
-public class ObjectMarshaller extends VariableMarshaller<Object> {
+public class ObjectMarshaller<T> extends VariableMarshaller<T> {
 
     private int estimatedSize;
 
@@ -50,14 +50,14 @@ public class ObjectMarshaller extends VariableMarshaller<Object> {
         dataOut.write(data);
     }
 
-    public Object readPayload(DataInput dataIn) throws IOException {
+    public T readPayload(DataInput dataIn) throws IOException {
         int size = dataIn.readInt();
         byte[] data = new byte[size];
         dataIn.readFully(data);
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);
         ObjectInputStream objectIn = new ObjectInputStream(bytesIn);
         try {
-            return objectIn.readObject();
+            return (T) objectIn.readObject();
         } catch (ClassNotFoundException e) {
             throw new IOException(e.getMessage());
         }

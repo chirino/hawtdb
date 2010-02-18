@@ -28,6 +28,8 @@ import org.fusesource.hawtdb.util.buffer.Buffer;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class VariableBufferMarshaller extends VariableMarshaller<Buffer> {
+    
+    static public final VariableBufferMarshaller INSTANCE = new VariableBufferMarshaller();
 
     public void writePayload(Buffer value, DataOutput dataOut) throws IOException {
         dataOut.writeInt(value.length);
