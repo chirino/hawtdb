@@ -1,0 +1,31 @@
+---
+title: HawtDB
+in_menu: true
+sort_info: 1
+--- name:overview pipeline:haml,tags
+
+%h1 {project_name:}
+
+{project_slogan:}
+
+--- name:content pipeline:tags,markdown
+
+{project_name:}
+===============
+
+{project_name:} is a high-performance key/value embedded database for Java applications.
+
+Features
+--------
+
+* ACID transactions
+* Multiversion Concurrency Control (MVCC)
+* Object caching
+* Deferred Object Marshaling
+
+<!--
+Getting started
+---------------
+
+For more information, checkout the [developer guide](documentation/index.html)
+-->
