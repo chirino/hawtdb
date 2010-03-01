@@ -72,7 +72,6 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
         return "{ page: "+this.page+", base: "+base+", head: "+head+", references: "+snapshots+", entries: "+entries.size()+" }";
     }
     
-    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeLong(head);
         out.writeLong(base);
@@ -87,7 +86,6 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         head = in.readLong();
         base = in.readLong();
@@ -106,18 +104,15 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
         return rc;
     }
     
-    @Override
     public Iterator<Commit> iterator() {
         return new Iterator<Commit>() {
             Commit next = nextCommit(entries.getHead());
             Commit last;
             
-            @Override
             public boolean hasNext() {
                 return next!=null;
             }
 
-            @Override
             public Commit next() {
                 if( next==null ) {
                     throw new NoSuchElementException();
@@ -127,7 +122,6 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
                 return last;
             }
 
-            @Override
             public void remove() {
                 if( last==null ) {
                     throw new IllegalStateException();

@@ -119,13 +119,11 @@ class Update implements Externalizable {
         return "{ page: "+page+", flags: "+flags+" }";
     }
 
-    @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         page = in.readInt();
         flags = in.readByte();
     }
 
-    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeInt(page);
         out.writeByte(flags);

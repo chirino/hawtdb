@@ -127,14 +127,12 @@ final class Commit extends BatchEntry implements Externalizable {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         base = in.readLong();
         head = in.readLong();
         updates = (ConcurrentHashMap<Integer, Update>) in.readObject();
     }
 
-    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeLong(base);
         out.writeLong(head);

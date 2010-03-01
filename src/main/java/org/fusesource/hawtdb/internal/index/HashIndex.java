@@ -156,7 +156,6 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void visit(IndexVisitor<Key, Value> visitor) throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
@@ -307,7 +306,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     public static final int HEADER_SIZE = MAGIC.length+ 12; // bucketsPage, capacity, active
 
     private final EncoderDecoder<Buckets<Key, Value>> BUCKET_ENCODER_DECODER = new EncoderDecoder<Buckets<Key, Value>>() {
-        @Override
+
         public List<Integer> store(Paged paged, int page, Buckets<Key, Value> buckets) {
             DataByteArrayOutputStream os = new DataByteArrayOutputStream(HEADER_SIZE);
             try {
@@ -324,7 +323,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             paged.write(page, buffer);
             return Collections.emptyList();
         }
-        @Override
+
         public Buckets<Key, Value> load(Paged paged, int page) {
             Buckets<Key, Value> buckets = new Buckets<Key, Value>(HashIndex.this);
             Buffer buffer = new Buffer(HEADER_SIZE);
@@ -343,7 +342,6 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             return buckets;
         }
         
-        @Override
         public List<Integer> remove(Paged paged, int page) {
             return Collections.emptyList();
         }

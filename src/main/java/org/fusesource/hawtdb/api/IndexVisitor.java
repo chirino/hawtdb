@@ -82,7 +82,6 @@ public interface IndexVisitor<Key,Value> {
             }
         }
 
-        @Override
         public boolean isInterestedInKeysBetween(Key first, Key second) {
             return predicate.isInterestedInKeysBetween(first, second);
         }
