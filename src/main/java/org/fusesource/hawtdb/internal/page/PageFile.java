@@ -54,6 +54,10 @@ public class PageFile implements Paged {
         return allocator;
     }
 
+    public int alloc() {
+        return allocator().alloc(1);
+    }
+    
 	public void read(int pageId, Buffer buffer) {
 		file.read(offset(pageId), buffer);
 	}
@@ -124,6 +128,5 @@ public class PageFile implements Paged {
     public String toString() {
         return "{ header size: "+headerSize+", page size: "+pageSize+", allocator: "+allocator+" }";
     }
-
 
 }

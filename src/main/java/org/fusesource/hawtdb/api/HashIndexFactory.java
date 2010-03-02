@@ -18,6 +18,7 @@ package org.fusesource.hawtdb.api;
 
 import org.fusesource.hawtdb.internal.index.HashIndex;
 import org.fusesource.hawtdb.util.marshaller.Marshaller;
+import org.fusesource.hawtdb.util.marshaller.ObjectMarshaller;
 
 /**
  * 
@@ -54,10 +55,10 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
 
     private void assertFieldsSet() {
         if (keyMarshaller == null) {
-            throw new IllegalArgumentException("The key marshaller must be set before calling open");
+            keyMarshaller = new ObjectMarshaller<Key>();
         }
         if (valueMarshaller == null) {
-            throw new IllegalArgumentException("The key marshaller must be set before calling open");
+            valueMarshaller = new ObjectMarshaller<Value>();
         }
     }
 

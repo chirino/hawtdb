@@ -18,6 +18,7 @@ package org.fusesource.hawtdb.api;
 
 import org.fusesource.hawtdb.internal.index.BTreeIndex;
 import org.fusesource.hawtdb.util.marshaller.Marshaller;
+import org.fusesource.hawtdb.util.marshaller.ObjectMarshaller;
 
 /**
  * This object is used to create variable magnitude b+tree indexes. 
@@ -68,10 +69,10 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
 
     private BTreeIndex<Key, Value> createInstance(Paged paged, int page) {
         if (keyMarshaller == null) {
-            throw new IllegalArgumentException("The key marshaller must be set before calling open");
+            keyMarshaller = new ObjectMarshaller<Key>();
         }
         if (valueMarshaller == null) {
-            throw new IllegalArgumentException("The key marshaller must be set before calling open");
+            valueMarshaller = new ObjectMarshaller<Value>();
         }
         return new BTreeIndex<Key, Value>(paged, page, this);
     }

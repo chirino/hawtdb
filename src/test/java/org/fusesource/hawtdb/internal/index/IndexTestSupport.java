@@ -66,7 +66,7 @@ public abstract class IndexTestSupport {
         pff.setPageSize(pageSize);
         pff.getFile().delete();
         pff.open();
-        pf = pff.getConcurrentPageFile();
+        pf = pff.getHawtPageFile();
         tx = pf.tx();
         index = createIndex(-1);
         
@@ -76,7 +76,7 @@ public abstract class IndexTestSupport {
         int page = index.getPage();
         pff.close();
         pff.open();
-        pf = pff.getConcurrentPageFile();
+        pf = pff.getHawtPageFile();
         tx = pf.tx();
         index = createIndex(page);
     }

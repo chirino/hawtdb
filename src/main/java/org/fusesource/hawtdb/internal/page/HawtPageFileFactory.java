@@ -22,7 +22,7 @@ package org.fusesource.hawtdb.internal.page;
  */
 public class HawtPageFileFactory extends PageFileFactory {
 
-    private HawtPageFile concurrentPageFile;
+    private HawtPageFile hawtPageFile;
     
     protected boolean drainOnClose;
     protected boolean sync = true;
@@ -43,22 +43,22 @@ public class HawtPageFileFactory extends PageFileFactory {
         }
         boolean existed = file.isFile();
         super.open();
-        if (concurrentPageFile == null) {
-            concurrentPageFile = new HawtPageFile(this);
+        if (hawtPageFile == null) {
+            hawtPageFile = new HawtPageFile(this);
             if( existed ) {
-                concurrentPageFile.recover();
+                hawtPageFile.recover();
             } else {
-                concurrentPageFile.reset();
+                hawtPageFile.reset();
             }
         }
     }
     
     public void close() {
-        if (concurrentPageFile != null) {
-            concurrentPageFile.suspend(true, false, drainOnClose);
-            concurrentPageFile.flush();
-            concurrentPageFile.performBatches();
-            concurrentPageFile=null;
+        if (hawtPageFile != null) {
+            hawtPageFile.suspend(true, false, drainOnClose);
+            hawtPageFile.flush();
+            hawtPageFile.performBatches();
+            hawtPageFile=null;
         }
         super.close();
     }
@@ -71,8 +71,8 @@ public class HawtPageFileFactory extends PageFileFactory {
         this.sync = sync;
     }
     
-    public HawtPageFile getConcurrentPageFile() {
-        return concurrentPageFile;
+    public HawtPageFile getHawtPageFile() {
+        return hawtPageFile;
     }
 
     public boolean isDrainOnClose() {

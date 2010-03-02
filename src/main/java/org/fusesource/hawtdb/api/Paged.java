@@ -44,6 +44,12 @@ public interface Paged {
      * @return An object which provides access to allocate/deallocate pages.
      */
     Allocator allocator();
+    
+    /**
+     * does the same as allocator().alloc(1)
+     * @return a newly allocated page location.
+     */
+    int alloc();
 
     enum SliceType {
         READ, WRITE, READ_WRITE

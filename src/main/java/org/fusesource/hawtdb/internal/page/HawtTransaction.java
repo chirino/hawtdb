@@ -29,7 +29,6 @@ import org.fusesource.hawtdb.util.StringSupport;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 
 import static org.fusesource.hawtdb.internal.page.DeferredUpdate.*;
-import static org.fusesource.hawtdb.internal.page.Update.*;
 
 /**
  * Transaction objects are NOT thread safe. Users of this object should
@@ -160,6 +159,10 @@ final class HawtTransaction implements Transaction {
     
     public Allocator allocator() {
         return txallocator;
+    }
+    
+    public int alloc() {
+        return allocator().alloc(1);
     }
 
     public void read(int page, Buffer buffer) throws IOPagingException {

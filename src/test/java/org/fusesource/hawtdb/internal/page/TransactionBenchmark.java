@@ -94,7 +94,7 @@ public class TransactionBenchmark {
     private void preallocate(final int INITIAL_PAGE_COUNT) {
         benchmark.setSetup(new Callback(){
             public void run(HawtPageFileFactory pff) throws Exception {
-                Transaction tx = pff.getConcurrentPageFile().tx();
+                Transaction tx = pff.getHawtPageFile().tx();
                 for (int i = 0; i < INITIAL_PAGE_COUNT; i++) {
                     int page = tx.allocator().alloc(1);
                     tx.write(page, new Buffer(THE_DATA));

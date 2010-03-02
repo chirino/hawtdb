@@ -18,14 +18,56 @@ sort_info: 1
 Features
 --------
 
-* ACID transactions
+* Optional ACID transactions
 * Multiversion Concurrency Control (MVCC)
-* Object caching
-* Deferred Object Marshaling
+* Object Caching and Object Marshaling Deferring
+* BTree and Hash Indexes
 
-<!--
-Getting started
----------------
+Overview
+=============
 
-For more information, checkout the [developer guide](documentation/index.html)
--->
+HawtDB implements index operations over a page file.  An index provides Map like access to persistent data.  The page file provides block oriented access to a data file.  There are transactional and non-transactional implementations of the page file.  The transactional version provides MVCC.
+
+The following shows how to open a transaction page file:
+{pygmentize:: java}
+// Opening a transactional page file.
+HawtPageFileFactory factory = new HawtPageFileFactory()
+factory.setFile(new File("mydb.dat"));
+factory.open();
+HawtPageFile pageFile = factory.getHawtPageFile();
+{pygmentize}
+
+You can store multiple indexes in a single page file, but they just need to be stored at different page locations.  For this simple example, we will be storing the index root in at page location 0 (the first page of the page file).
+
+How to initialize an index:
+{pygmentize:: java}
+BTreeIndexFactory<String, String> indexFactory = 
+    new BTreeIndexFactory<String, String>();
+
+Transaction tx = pageFile.tx();
+int page = tx.alloc(); 
+assert page==0;
+Index<String, String> root = indexFactory.create(tx, page);
+tx.commit();
+{pygmentize}
+
+The index factory is used initialize new indexes and open existing indexes.  It uses standard object serialization for the keys and values stored in the index, but the index factory can be configured to use a custom serialization scheme if desired.
+
+Storing data in an index:
+{pygmentize:: java}
+Transaction tx = pageFile.tx();
+Index<String, String> root = indexFactory.open(tx, 0);
+root.put("Key:1", "Hello World");
+tx.commit();
+{pygmentize}
+
+
+Retreiving data from an index:
+{pygmentize:: java}
+Transaction tx = pageFile.tx();
+Index<String, String> root = indexFactory.open(tx, 0);
+String result = root.get("Key:1");
+tx.commit();
+{pygmentize}
+
+

@@ -65,7 +65,7 @@ public class ConcurrentPageFileTest {
         pff = createConcurrentPageFileFactory();
         pff.getFile().delete();
         pff.open();
-        pf = pff.getConcurrentPageFile();
+        pf = pff.getHawtPageFile();
     }
 
     @After
@@ -76,7 +76,7 @@ public class ConcurrentPageFileTest {
     protected void reload() {
         pff.close();
         pff.open();
-        pf = pff.getConcurrentPageFile();
+        pf = pff.getHawtPageFile();
     }
 
     protected int store(Paged tx, String value) throws IOException {

@@ -51,7 +51,7 @@ public class TransactionBenchmarker<A extends TransactionActor<A>> {
             if( setup!=null ) {
                 setup.run(pff);
             }
-            HawtPageFile pf = pff.getConcurrentPageFile();
+            HawtPageFile pf = pff.getHawtPageFile();
             Benchmarker benchmark = new Benchmarker();
             benchmark.setSamples(samples);
             benchmark.setPeriod(period);
