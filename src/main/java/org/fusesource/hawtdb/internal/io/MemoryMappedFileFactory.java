@@ -40,7 +40,7 @@ public class MemoryMappedFileFactory {
                 throw new IllegalArgumentException("mappingSegementSize property must be greater than 0");
             }
             // We auto create the parent directory.
-            file.getParentFile().mkdirs();
+            file.getCanonicalFile().getParentFile().mkdirs();
             memoryMappedFile = new MemoryMappedFile(file, mappingSegementSize);
         }
     }

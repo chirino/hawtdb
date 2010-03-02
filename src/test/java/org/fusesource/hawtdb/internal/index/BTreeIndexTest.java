@@ -61,37 +61,29 @@ public class BTreeIndexTest extends IndexTestSupport {
             return factory.open(tx, page);
         }
     }
-
-    public void breakpoint() {}
     
 //    @Test
-//    public void lotsOfUpdatesWithTxsThatStayOpen() throws Exception {
-//        createPageFileAndIndex((short) (200));
-//        BTreeIndex<String, Long> index = ((BTreeIndex<String, Long>)this.index);
-//        for (int i = 0; i < 1000*5; i++) {
-//            // Do a read on a new tx to trigger a tx which is not closed.
-//            pf.tx().read(0, new Buffer(1024));
-//
-//            if( i == 637 ) {
-//                breakpoint();
-//            }
-//            index.put(key(i), (long)i);
-//            tx.commit();
-//            
-//            assertEquals(new Long(i), index.get(key(i)));
-//            tx.commit();
-//        }
-//    } 
-    
-    
-    @Test
-    public void lotsOfUpdates() throws Exception {
+    public void lotsOfInsertsWithTxsThatStayOpen() throws Exception {
         createPageFileAndIndex((short) (200));
         BTreeIndex<String, Long> index = ((BTreeIndex<String, Long>)this.index);
         for (int i = 0; i < 1000*5; i++) {
-            if( i == 637 ) {
-                breakpoint();
-            }
+            // Do a read on a new tx to trigger a tx which is not closed.
+            pf.tx().read(0, new Buffer(1024));
+
+            index.put(key(i), (long)i);
+            tx.commit();
+            
+            assertEquals(new Long(i), index.get(key(i)));
+            tx.commit();
+        }
+    } 
+    
+    
+    @Test
+    public void lotsOfInserts() throws Exception {
+        createPageFileAndIndex((short) (200));
+        BTreeIndex<String, Long> index = ((BTreeIndex<String, Long>)this.index);
+        for (int i = 0; i < 1000*5; i++) {
             index.put(key(i), (long)i);
             tx.commit();
             

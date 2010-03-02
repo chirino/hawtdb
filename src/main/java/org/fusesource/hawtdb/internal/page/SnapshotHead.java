@@ -60,27 +60,29 @@ final class SnapshotHead extends BatchEntry {
     }
     
     public int translatePage(int page) {
+        int rc = page;
         // Look for the page in the previous commits..
         Batch batch = parent;
-        BatchEntry tail = null;
         BatchEntry entry = this;
-        while( true ) {
+        outer: while( true ) {
             if( batch.isPerformed() ) {
                 break;
             }
             
+            BatchEntry first = null;
             while( true ) {
-                if( tail == null ) {
-                    tail = entry;
-                } else if( !(entry.getHeadRevision() < tail.getHeadRevision()) ) {
+                if( first == null ) {
+                    first = entry;
+                } else if( first==entry ) {
                     break;
                 }
                 
                 Commit commit = entry.isCommit();
                 if( commit !=null ) {
-                    Update update = commit.updates.get(page);
+                    Update update = commit.updates.get(rc);
                     if( update!=null ) {
-                        return update.page();
+                        rc = update.page();
+                        break outer;
                     }
                 }
                 entry = entry.getPreviousCircular();
@@ -90,10 +92,9 @@ final class SnapshotHead extends BatchEntry {
             if( batch==null ) {
                 break;
             }
-            tail = null;
             entry = batch.entries.getTail();
         }
-        return page;
+        return rc;
     }
     
     
