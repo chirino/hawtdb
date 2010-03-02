@@ -100,7 +100,6 @@ final class SnapshotHead extends BatchEntry {
     
     public <T> T get(EncoderDecoder<T> marshaller, int page) {
         Batch batch = parent;
-        BatchEntry tail = null;
         BatchEntry entry = this;
         
         while( true ) {
@@ -108,10 +107,11 @@ final class SnapshotHead extends BatchEntry {
                 break;
             }
             
+            BatchEntry tail = null;
             while( true ) {
                 if( tail == null ) {
                     tail = entry;
-                } else if( !(entry.getHeadRevision() < tail.getHeadRevision()) ) {
+                } else if( tail==entry ) {
                     break;
                 }
                 
@@ -132,7 +132,6 @@ final class SnapshotHead extends BatchEntry {
             if( batch==null ) {
                 break;
             }
-            tail = null;
             entry = batch.entries.getTail();
         }
         return null;

@@ -62,7 +62,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
     }
     
-//    @Test
+    @Test
     public void lotsOfInsertsWithTxsThatStayOpen() throws Exception {
         createPageFileAndIndex((short) (200));
         BTreeIndex<String, Long> index = ((BTreeIndex<String, Long>)this.index);
@@ -77,8 +77,7 @@ public class BTreeIndexTest extends IndexTestSupport {
             tx.commit();
         }
     } 
-    
-    
+        
     @Test
     public void lotsOfInserts() throws Exception {
         createPageFileAndIndex((short) (200));
