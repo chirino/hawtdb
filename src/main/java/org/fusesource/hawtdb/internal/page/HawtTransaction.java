@@ -240,6 +240,7 @@ final class HawtTransaction implements Transaction {
             if (updates!=null) {
                 // If the commit is successful it will release our snapshot..
                 parent.commit(snapshot, updates);
+                snapshot = null;
             }
             failed = false;
         } finally {
@@ -249,7 +250,10 @@ final class HawtTransaction implements Transaction {
                 rollback();
             }
             updates = null;
-            snapshot = null;
+            if( snapshot!=null ) {
+                snapshot.close();
+                snapshot = null;
+            }
         }
     }
 

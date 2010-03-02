@@ -38,7 +38,7 @@ import org.junit.Test;
 public abstract class IndexTestSupport {
     
     private HawtPageFileFactory pff;
-    private HawtPageFile pf;
+    protected HawtPageFile pf;
     protected Index<String,Long> index;
     protected Transaction tx;
 

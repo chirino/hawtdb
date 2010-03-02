@@ -69,7 +69,7 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     }
 
     public String toString() { 
-        return "{ page: "+this.page+", base: "+base+", head: "+head+", references: "+snapshots+", entries: "+entries.size()+" }";
+        return "{ page: "+this.page+", base: "+base+", head: "+head+", snapshots: "+snapshots+", entries: "+entries.size()+" }";
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {

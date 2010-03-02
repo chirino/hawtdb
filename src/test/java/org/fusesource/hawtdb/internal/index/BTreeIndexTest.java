@@ -28,6 +28,7 @@ import org.fusesource.hawtdb.api.BTreeIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.IndexVisitor;
 import org.fusesource.hawtdb.internal.index.BTreeIndex;
+import org.fusesource.hawtdb.util.buffer.Buffer;
 import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
 import org.fusesource.hawtdb.util.marshaller.StringMarshaller;
 import org.junit.Before;
@@ -61,6 +62,44 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
     }
 
+    public void breakpoint() {}
+    
+//    @Test
+//    public void lotsOfUpdatesWithTxsThatStayOpen() throws Exception {
+//        createPageFileAndIndex((short) (200));
+//        BTreeIndex<String, Long> index = ((BTreeIndex<String, Long>)this.index);
+//        for (int i = 0; i < 1000*5; i++) {
+//            // Do a read on a new tx to trigger a tx which is not closed.
+//            pf.tx().read(0, new Buffer(1024));
+//
+//            if( i == 637 ) {
+//                breakpoint();
+//            }
+//            index.put(key(i), (long)i);
+//            tx.commit();
+//            
+//            assertEquals(new Long(i), index.get(key(i)));
+//            tx.commit();
+//        }
+//    } 
+    
+    
+    @Test
+    public void lotsOfUpdates() throws Exception {
+        createPageFileAndIndex((short) (200));
+        BTreeIndex<String, Long> index = ((BTreeIndex<String, Long>)this.index);
+        for (int i = 0; i < 1000*5; i++) {
+            if( i == 637 ) {
+                breakpoint();
+            }
+            index.put(key(i), (long)i);
+            tx.commit();
+            
+            assertEquals(new Long(i), index.get(key(i)));
+            tx.commit();
+        }
+    }     
+    
     /**
      * Yeah, the current implementation does NOT try to balance the tree.  Here is 
      * a test case showing that it gets out of balance.  
@@ -184,4 +223,5 @@ public class BTreeIndexTest extends IndexTestSupport {
     protected String key(int i) {
         return "key:"+nf.format(i);
     }
+       
 }
