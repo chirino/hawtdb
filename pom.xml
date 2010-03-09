@@ -21,6 +21,7 @@
 
   <groupId>org.fusesource.hawtdb</groupId>
   <artifactId>hawtdb</artifactId>
+  <packaging>bundle</packaging>
   <version>1.0-SNAPSHOT</version>
 
   <name>HawtDB</name>
@@ -129,7 +130,32 @@
     </extensions>
 
     <plugins>
-
+      <plugin>
+         <groupId>org.apache.felix</groupId>
+	 <artifactId>maven-bundle-plugin</artifactId>
+	 <version>2.0.0</version>
+         <extensions>true</extensions>
+         <configuration>
+           <instructions>
+             <Implementation-Title>HawtDB</Implementation-Title>
+             <Implementation-Vendor>FuseSource</Implementation-Vendor>
+             <Implementation-Vendor-Id>org.fusesource</Implementation-Vendor-Id>
+             <Implementation-Version>${pom.version}</Implementation-Version>
+             <Specification-Title>HawtDB</Specification-Title>
+             <Specification-Vendor>FuseSource</Specification-Vendor>
+             <Specification-Version>${pom.version}</Specification-Version>
+	     <Import-Package>
+               !org.fusesource.hawtdb*,
+               org.apache.commons.logging.*;version="[1.1,2)",
+	       *
+             </Import-Package>
+	     <Export-Package>
+               org.fusesource.hawtdb*;version=${pom.version};-split-package:=merge-first
+             </Export-Package>	     
+             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+           </instructions>
+         </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
