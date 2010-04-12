@@ -1,5 +1,5 @@
-![HawtDB][1]
-============
+![HawtDB][logo]
+===============
 
 This library implements a fast embeddable key/value store database for Java.  
 It's perfect when SQL would be overkill and/or you need finer grained control 
@@ -18,4 +18,4 @@ Documentation
 
 * [Web Site](http://hawtdb.fusesource.org/)
 
-[1]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
+[logo]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
