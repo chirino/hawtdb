@@ -2,6 +2,7 @@
 title: HawtDB
 in_menu: true
 sort_info: 1
+api_base: http://hawtdb.fusesource.org/maven/1.0/apidocs/org/fusesource/hawtdb
 --- name:overview pipeline:haml,tags
 
 %h1 {project_name:}
@@ -10,25 +11,33 @@ sort_info: 1
 
 --- name:content pipeline:tags,markdown
 
-{project_name:}
-===============
+## {project_name:}
 
-{project_name:} is a high-performance key/value embedded database for Java applications.
+{project_name:} is a high-performance key/value embedded database for Java
+applications.
 
-Features
---------
+### Features
 
 * Optional ACID transactions
 * Multiversion Concurrency Control (MVCC)
 * Object Caching and Object Marshaling Deferring
 * BTree and Hash Indexes
 
-Overview
-=============
+## Overview
 
-HawtDB implements index operations over a page file.  An index provides Map like access to persistent data.  The page file provides block oriented access to a data file.  There are transactional and non-transactional implementations of the page file.  The transactional version provides MVCC.
+HawtDB implements index operations over a page file. An index provides Map like
+access to persistent data. The page file provides block oriented access to a
+data file. There are transactional and non-transactional implementations of the
+page file. The transactional version provides
+[MVCC](http://en.wikipedia.org/wiki/Multiversion_concurrency_control).
 
-The following shows how to open a transaction page file:
+### Transaction Page Files
+
+A transactional page file is created with the
+[`TxPageFileFactory`]({api_base:}/api/TxPageFileFactory.html) class. You first
+configure it and then `open()` it.
+
+Example:
 {pygmentize:: java}
 // Opening a transactional page file.
 TxPageFileFactory factory = new TxPageFileFactory()
@@ -37,9 +46,49 @@ factory.open();
 TxPageFile pageFile = factory.getTxPageFile();
 {pygmentize}
 
-You can store multiple indexes in a single page file, but they just need to be stored at different page locations.  For this simple example, we will be storing the index root in at page location 0 (the first page of the page file).
+Use a transactional page file when you need your indexes to have 
+[ACID](http://en.wikipedia.org/wiki/ACID) levels of service.
 
-How to initialize an index:
+### Non Transaction Page Files
+
+Sometimes you don't need an index to provide
+[ACID](http://en.wikipedia.org/wiki/ACID) levels of service. Perhaps your just
+using the index to page out of memory temporary values that can be discarded on
+restart. Then you just need to create a plain [`PageFile`]({api_base:}/api/PageFile.html) instead of a
+[`TxPageFile`]({api_base:}/api/TxPageFile.html)
+
+Similar to transaction page files, a non-transactional page file is created with
+the [`PageFileFactory`]({api_base:}/api/PageFileFactory.html) class. You first
+configure it and then `open()` it.
+
+Example:
+{pygmentize:: java}
+// Opening a transactional page file.
+PageFileFactory factory = new PageFileFactory()
+factory.setFile(new File("mydb.dat"));
+factory.open();
+PageFile pageFile = factory.getPageFile();
+{pygmentize}
+
+Warning, since the page file is not transactional, you must serialize access to
+the index and page file yourself. Concurrent index updates will just step on
+each other and cause unexpected errors and index inconsistencies.
+
+## Using Indexes with Page Files
+
+There are two kinds of indexes.  BTree and Hash based indexes.
+
+* BTree: Maintain keys in sorted order and support sorted iteration
+* Hash: Keys are not sorted.  Can perform better than hash indexes.
+
+You can store multiple indexes of different types in a single page file.  Both the BTree and Hash indexes use factory object to create instances of the index.  The factory holds configuration information for the index.  The factories support either creating an index at a new page location or open a previously created index at an existing page location.
+
+For new indexes, you must allocate a new root page for the index.  The index itself will manage any additional pages that it needs 
+for storing indexed data.
+
+When an index is opened or created, you must pass it a [`Paged`]({api_base:}/api/Paged.html) object.  In the case of a non-transaction page file, this would be the [`PageFile`]({api_base:}/api/PageFile.html) itself, but in the case of a transaction page file, then this would be a [`Transaction`]({api_base:}/api/Transaction.html) object created using the `tx()` method.
+
+BTree Index Transactional Example:
 {pygmentize:: java}
 BTreeIndexFactory<String, String> indexFactory = 
     new BTreeIndexFactory<String, String>();
@@ -51,7 +100,17 @@ Index<String, String> root = indexFactory.create(tx, page);
 tx.commit();
 {pygmentize}
 
-The index factory is used initialize new indexes and open existing indexes.  It uses standard object serialization for the keys and values stored in the index, but the index factory can be configured to use a custom serialization scheme if desired.
+Hash Index Non-Transactional Example:
+{pygmentize:: java}
+HashIndexFactory<String, String> indexFactory = 
+    new HashIndexFactory<String, String>();
+
+int page = pageFile.alloc(); 
+assert page==0;
+Index<String, String> root = indexFactory.create(pageFile, page);
+{pygmentize}
+
+### Accessing Index Data
 
 Storing data in an index:
 {pygmentize:: java}
@@ -71,3 +130,39 @@ tx.commit();
 {pygmentize}
 
 
+## Optimistic Transactions
+
+{project_name:} does not provide any form of pessimistic locking. All
+transactions execute concurrently potentially at different versioned views of
+the page file. Once a transaction starts, it will not see the updates performed
+to the page file by subsequent transactions that commit.
+
+If any of the pages updated in a transaction are updated by another concurrent
+update, then a
+[OptimisticUpdateException]({api_base:}/api/OptimisticUpdateException.html) is
+thrown and and the update is rolled back. Therefore, end user operations which
+update indexes should catch this runtime exception and either retry the
+operation or report the failure to the user.
+
+## Customized Key/Value Encoding
+
+By default the indexes will use standard java object serialization to serialize keys and values.  If you want to provide a customized encoding strategy or if your key or value does not support object serialization, then you can configure key and value marshalers on the index factory objects.
+
+For example, it is much more efficient to use the  [`StringMarshaller`]({api_base:}/util/marshaller/StringMarshaller.html) StringMarshaller when using String values than to standard object serialization:
+
+{pygmentize:: java}
+indexFactory.setKeyMarshaller(StringMarshaller.INSTANCE);
+indexFactory.setValueMarshaller(StringMarshaller.INSTANCE);
+{pygmentize}
+
+You can create custom Marshaller implementations by implementing the [`Marshaller`]({api_base:}/util/marshaller/Marshaller.html) class.
+
+## Object Caching and Object Marshaling Deferring
+
+If your keys and values are immutable values, then you should enable the deferred encoding option on the index.  This option allows the index to avoid encoding the keys and values when the index operations occur and instead places them on to an internally maintained object cache.  Keys/Values are not encoded 
+until the last possible moment, which is when the index pages are flushed to disk in a batch.  This allows you to avoid some encoding processing if the same key gets updated multiple times.  It also avoid some object decoding as a subsequent get operation can return a cached value instead of having to do a page decode.
+
+Example:
+{pygmentize:: java}
+indexFactory.setDeferredEncoding(true);
+{pygmentize}
