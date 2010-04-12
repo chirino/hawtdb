@@ -31,10 +31,10 @@ HawtDB implements index operations over a page file.  An index provides Map like
 The following shows how to open a transaction page file:
 {pygmentize:: java}
 // Opening a transactional page file.
-HawtPageFileFactory factory = new HawtPageFileFactory()
+TxPageFileFactory factory = new TxPageFileFactory()
 factory.setFile(new File("mydb.dat"));
 factory.open();
-HawtPageFile pageFile = factory.getHawtPageFile();
+TxPageFile pageFile = factory.getTxPageFile();
 {pygmentize}
 
 You can store multiple indexes in a single page file, but they just need to be stored at different page locations.  For this simple example, we will be storing the index root in at page location 0 (the first page of the page file).
