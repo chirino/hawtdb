@@ -23,10 +23,8 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import org.fusesource.hawtdb.internal.page.ExtentInputStream;
-import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
-import org.fusesource.hawtdb.internal.page.PageFile;
-import org.fusesource.hawtdb.internal.page.PageFileFactory;
+import org.fusesource.hawtdb.api.PageFile;
+import org.fusesource.hawtdb.api.PageFileFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

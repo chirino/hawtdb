@@ -19,13 +19,13 @@ package org.fusesource.hawtdb.internal.index;
 import java.io.File;
 import java.util.Random;
 
+import org.fusesource.hawtdb.api.TxPageFile;
+import org.fusesource.hawtdb.api.TxPageFileFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.OutOfSpaceException;
 import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtdb.internal.Action;
 import org.fusesource.hawtdb.internal.Benchmarker.BenchmarkAction;
-import org.fusesource.hawtdb.internal.page.HawtPageFile;
-import org.fusesource.hawtdb.internal.page.HawtPageFileFactory;
 import org.fusesource.hawtdb.internal.page.TransactionActor;
 import org.fusesource.hawtdb.internal.page.TransactionBenchmarker;
 import org.fusesource.hawtdb.util.buffer.Buffer;
@@ -84,13 +84,13 @@ public abstract class IndexBenchmark {
     }
     
     TransactionBenchmarker<IndexActor> benchmark = new TransactionBenchmarker<IndexActor>() {
-        protected IndexActor createActor(HawtPageFile pageFile, Action<IndexActor> action, int i) {
+        protected IndexActor createActor(TxPageFile pageFile, Action<IndexActor> action, int i) {
             return new IndexActor();
         };
     };
 
     public IndexBenchmark() {
-        HawtPageFileFactory hawtPageFileFactory = new HawtPageFileFactory();
+        TxPageFileFactory hawtPageFileFactory = new TxPageFileFactory();
         hawtPageFileFactory.setFile(new File("target/test-data/" + getClass().getName() + ".db"));
         hawtPageFileFactory.setSync(false);
          // Limit file growth to 1 Gig.

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 
+import org.fusesource.hawtdb.api.Allocator;
 import org.fusesource.hawtdb.api.Paged;
 import org.fusesource.hawtdb.util.list.LinkedNode;
 import org.fusesource.hawtdb.util.list.LinkedNodeList;
@@ -169,7 +170,7 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
         }
     }
 
-    public void release(SimpleAllocator allocator) {
+    public void release(Allocator allocator) {
         for (Commit commit : this) {
             for (Entry<Integer, Update> entry : commit.updates.entrySet()) {
                 int key = entry.getKey();

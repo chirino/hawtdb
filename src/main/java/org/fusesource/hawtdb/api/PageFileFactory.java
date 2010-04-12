@@ -14,20 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.hawtdb.internal.page;
+package org.fusesource.hawtdb.api;
 
+import java.io.File;
 import java.io.IOException;
 
-import org.fusesource.hawtdb.api.IOPagingException;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFileFactory;
+import org.fusesource.hawtdb.internal.page.HawtPageFile;
 
 /**
+ * A factory to create PageFile objects.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class PageFileFactory extends MemoryMappedFileFactory {
+public class PageFileFactory {
 
-    private PageFile pageFile;
+    private final MemoryMappedFileFactory mappedFileFactory = new MemoryMappedFileFactory();
+    private HawtPageFile pageFile;
 
     protected int headerSize = 0;
     protected short pageSize = 1024 * 4;
@@ -37,9 +40,13 @@ public class PageFileFactory extends MemoryMappedFileFactory {
         return pageFile;
     }
 
+    /**
+     * Opens the PageFile object. A subsequent call to {@link #getPageFile()} will return 
+     * the opened PageFile.
+     */
     public void open() {
         try {
-            super.open();
+            mappedFileFactory.open();
         } catch (IOException e) {
             throw new IOPagingException(e);
         }
@@ -54,18 +61,22 @@ public class PageFileFactory extends MemoryMappedFileFactory {
                 throw new IllegalArgumentException("headerSize property cannot be negative.");
             }
             try {
-                pageFile = new PageFile(getMemoryMappedFile(), pageSize, headerSize, maxPages);
+                pageFile = new HawtPageFile(mappedFileFactory.getMemoryMappedFile(), pageSize, headerSize, maxPages);
             } catch (IOException e) {
                 throw new IOPagingException(e);
             }
         }
     } 
     
+    /**
+     * Closes the previously opened PageFile object.  Subsequent calls to 
+     * {@link PageFileFactory#getPageFile()} will return null. 
+     */
     public void close() {
         if (pageFile != null) {
             pageFile = null;
         }        
-        super.close();
+        mappedFileFactory.close();
     }
 
     public int getHeaderSize() {
@@ -92,4 +103,19 @@ public class PageFileFactory extends MemoryMappedFileFactory {
         setMaxPages( (int)((size-getHeaderSize())/getPageSize()) );
     }
     
+    public File getFile() {
+        return mappedFileFactory.getFile();
+    }
+
+    public int getMappingSegementSize() {
+        return mappedFileFactory.getMappingSegementSize();
+    }
+
+    public void setFile(File file) {
+        mappedFileFactory.setFile(file);
+    }
+
+    public void setMappingSegementSize(int mappingSegementSize) {
+        mappedFileFactory.setMappingSegementSize(mappingSegementSize);
+    }
 }

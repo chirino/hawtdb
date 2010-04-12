@@ -16,6 +16,8 @@
  */
 package org.fusesource.hawtdb.api;
 
+import org.fusesource.hawtdb.internal.util.Ranges;
+
 /**
  * Handles allocation management of resources.  Used for page allocations
  * in a {@link Paged} resource.
@@ -49,8 +51,20 @@ public interface Allocator {
      * @throws UnsupportedOperationException 
      */
     public void clear() throws UnsupportedOperationException;
-       
+
+    /**
+     * @return the maximum number of pages that this allocator will allocate.
+     */
     public int getLimit();
-    
+
+    /**
+     * @param page
+     * @return true if the page has been allocated.
+     */
     public boolean isAllocated(int page);
+
+    /**
+     * 
+     */
+    public void copy(Ranges freeList);
 }

@@ -19,16 +19,37 @@ package org.fusesource.hawtdb.api;
 import java.util.List;
 
 /**
- * Handy predicates for restricting the range of keys visited in a visitor.
+ * A predicate is used to narrow down the keys that an application is interested in 
+ * accessing.
+ *
+ * You can implement custom predicate implementations by implementing the Predicate interface or
+ * you can you some of the predefined predicate classes.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  * @param <Key>
  */
 public interface Predicate<Key> {
+    
+    /**
+     * 
+     * @param first the first key in the range or null if unknown
+     * @param second the last key in the range or null if unknown
+     * @return true if the predicate is interested in keys in the range.
+     */
     boolean isInterestedInKeysBetween(Key first, Key second);
+    
+    /**
+     * @param key
+     * @return true if the predicate is interested in the key
+     */
     boolean isInterestedInKey(Key key);
     
-    
+    /**
+     * Implements a logical OR predicate over a list of predicate expressions.
+     *  
+     * @param <Key>
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class OrPredicate<Key> implements Predicate<Key> {
         private final List<Predicate<Key>> conditions;
 
@@ -71,6 +92,12 @@ public interface Predicate<Key> {
         }
     }
 
+    /**
+     * Implements a logical AND predicate over a list of predicate expressions.
+     * 
+     * @param <Key> 
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class AndPredicate<Key> implements Predicate<Key> {
         private final List<Predicate<Key>> conditions;
 
@@ -113,6 +140,14 @@ public interface Predicate<Key> {
         }
     }
 
+    /**
+     * Implements a BETWEEN predicate between two key values.  It matches inclusive on 
+     * the first value and exclusive on the last value.  The predicate expression is 
+     * equivalent to: <code>(first <= x) AND (x < last)</code>
+     *  
+     * @param <Key> a Comparable class
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class BetweenPredicate<Key extends Comparable<? super Key>> implements Predicate<Key> {
         private final Key first;
         private final Key last;
@@ -137,6 +172,13 @@ public interface Predicate<Key> {
         }
     }
 
+    /**
+     * Implements a greater than predicate.  The predicate expression is 
+     * equivalent to: <code>x > value</code>
+     *  
+     * @param <Key> a Comparable class
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class GTPredicate<Key extends Comparable<? super Key>> implements Predicate<Key> {
         final private Key value;
 
@@ -158,6 +200,13 @@ public interface Predicate<Key> {
         }
     }
 
+    /**
+     * Implements a greater than or equal to predicate.  The predicate expression is 
+     * equivalent to: <code>x >= value</code>
+     *  
+     * @param <Key> a Comparable class
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class GTEPredicate<Key extends Comparable<? super Key>> implements Predicate<Key> {
         final private Key value;
 
@@ -179,6 +228,13 @@ public interface Predicate<Key> {
         }
     }
 
+    /**
+     * Implements a less than predicate.  The predicate expression is 
+     * equivalent to: <code>x < value</code>
+     *  
+     * @param <Key> a Comparable class
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class LTPredicate<Key extends Comparable<? super Key>> implements Predicate<Key> {
         final private Key value;
 
@@ -200,6 +256,13 @@ public interface Predicate<Key> {
         }
     }
 
+    /**
+     * Implements a less than or equal to predicate.  The predicate expression is 
+     * equivalent to: <code>x <= value</code>.
+     *  
+     * @param <Key> a Comparable class
+     * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+     */
     class LTEPredicate<Key extends Comparable<? super Key>> implements Predicate<Key> {
         final private Key value;
 

@@ -22,10 +22,10 @@ import static org.junit.Assert.assertNull;
 import java.io.File;
 import java.io.IOException;
 
+import org.fusesource.hawtdb.api.TxPageFile;
+import org.fusesource.hawtdb.api.TxPageFileFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.Transaction;
-import org.fusesource.hawtdb.internal.page.HawtPageFile;
-import org.fusesource.hawtdb.internal.page.HawtPageFileFactory;
 import org.junit.After;
 import org.junit.Test;
 
@@ -37,14 +37,14 @@ import org.junit.Test;
  */
 public abstract class IndexTestSupport {
     
-    private HawtPageFileFactory pff;
-    protected HawtPageFile pf;
+    private TxPageFileFactory pff;
+    protected TxPageFile pf;
     protected Index<String,Long> index;
     protected Transaction tx;
 
     
-    protected HawtPageFileFactory createConcurrentPageFileFactory() {
-        HawtPageFileFactory rc = new HawtPageFileFactory();
+    protected TxPageFileFactory createConcurrentPageFileFactory() {
+        TxPageFileFactory rc = new TxPageFileFactory();
         rc.setFile(new File("target/test-data/" + getClass().getName() + ".db"));
         return rc;
     }
@@ -66,7 +66,7 @@ public abstract class IndexTestSupport {
         pff.setPageSize(pageSize);
         pff.getFile().delete();
         pff.open();
-        pf = pff.getHawtPageFile();
+        pf = pff.getTxPageFile();
         tx = pf.tx();
         index = createIndex(-1);
         
@@ -76,7 +76,7 @@ public abstract class IndexTestSupport {
         int page = index.getPage();
         pff.close();
         pff.open();
-        pf = pff.getHawtPageFile();
+        pf = pff.getTxPageFile();
         tx = pf.tx();
         index = createIndex(page);
     }

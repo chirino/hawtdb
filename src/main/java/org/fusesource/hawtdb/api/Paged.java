@@ -18,23 +18,10 @@ package org.fusesource.hawtdb.api;
 
 import java.nio.ByteBuffer;
 
-import org.fusesource.hawtdb.internal.page.HawtPageFile;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 
 /**
- * Gets a named cache.
- * 
- * The cache can be used to reduce the CPU load of encoding an decoding complex
- * objects from the page file.
- * 
- * Pages that are being read/updated via the cache should not be accessed
- * directly via the Paged interface. The Cache will delay encoding objects until
- * a {@link HawtPageFile#flush()} occurs. During that time, page data
- * returned from the {@link Paged} interface will be inconsistent with what was
- * stored in the Cache.
- * 
- * The Cache is transactional and will remain coherent even using the same
- * snapshot isolation level provided to the page data.
+ * Implemented by objects which provides block io access to pages on file.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
@@ -91,7 +78,7 @@ public interface Paged {
      * @param buffer
      */
     public void write(int pageId, Buffer buffer);
-
+    
     /**
      * @return the maximum number of bytes that be read or written to a page.
      */

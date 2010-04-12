@@ -31,14 +31,15 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.fusesource.hawtdb.api.EncoderDecoder;
+import org.fusesource.hawtdb.api.TxPageFile;
+import org.fusesource.hawtdb.api.TxPageFileFactory;
 import org.fusesource.hawtdb.api.IOPagingException;
 import org.fusesource.hawtdb.api.OptimisticUpdateException;
 import org.fusesource.hawtdb.api.Paged;
 import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtdb.internal.page.ExtentInputStream;
 import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
-import org.fusesource.hawtdb.internal.page.HawtPageFile;
-import org.fusesource.hawtdb.internal.page.HawtPageFileFactory;
+import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 import org.junit.After;
 import org.junit.Before;
@@ -50,12 +51,11 @@ import org.junit.Test;
  */
 public class ConcurrentPageFileTest {
 
-    private HawtPageFileFactory pff;
+    private TxPageFileFactory pff;
+    private TxPageFile pf;
 
-    private HawtPageFile pf;
-
-    protected HawtPageFileFactory createConcurrentPageFileFactory() {
-        HawtPageFileFactory rc = new HawtPageFileFactory();
+    protected TxPageFileFactory createConcurrentPageFileFactory() {
+        TxPageFileFactory rc = new TxPageFileFactory();
         rc.setFile(new File("target/test-data/" + getClass().getName() + ".db"));
         return rc;
     }
@@ -65,7 +65,7 @@ public class ConcurrentPageFileTest {
         pff = createConcurrentPageFileFactory();
         pff.getFile().delete();
         pff.open();
-        pf = pff.getHawtPageFile();
+        pf = pff.getTxPageFile();
     }
 
     @After
@@ -76,7 +76,7 @@ public class ConcurrentPageFileTest {
     protected void reload() {
         pff.close();
         pff.open();
-        pf = pff.getHawtPageFile();
+        pf = pff.getTxPageFile();
     }
 
     protected int store(Paged tx, String value) throws IOException {
@@ -202,6 +202,10 @@ public class ConcurrentPageFileTest {
 
     }
 
+    Paged getRawPageFile() {
+        return ((HawtTxPageFile)pf).pageFile;
+    }
+    
     @Test
     public void pagesNotDirectlyUpdated() throws IOException, ClassNotFoundException {
         // New allocations get stored in the final positions.
@@ -210,17 +214,17 @@ public class ConcurrentPageFileTest {
         assertEquals(1, store(tx, "World"));
 
         // It should be on the page file already..
-        assertEquals("Hello", load(pff.getPageFile(), 0));
-        assertEquals("World", load(pff.getPageFile(), 1));
+        assertEquals("Hello", load(getRawPageFile(), 0));
+        assertEquals("World", load(getRawPageFile(), 1));
         tx.commit();
 
         // Apply the updates.
         pf.flush();
-        pf.performBatches();
+        ((HawtTxPageFile)pf).performBatches();
 
         // Should still be there..
-        assertEquals("Hello", load(pff.getPageFile(), 0));
-        assertEquals("World", load(pff.getPageFile(), 1));
+        assertEquals("Hello", load(getRawPageFile(), 0));
+        assertEquals("World", load(getRawPageFile(), 1));
 
         // Update the existing pages..
         store(tx, 0, "Good");
@@ -234,16 +238,16 @@ public class ConcurrentPageFileTest {
 
         // But the pages are should not be updated until the transaction gets
         // applied.
-        assertEquals("Hello", load(pff.getPageFile(), 0));
-        assertEquals("World", load(pff.getPageFile(), 1));
+        assertEquals("Hello", load(getRawPageFile(), 0));
+        assertEquals("World", load(getRawPageFile(), 1));
 
         // Apply them
         pf.flush();
-        pf.performBatches();
+        ((HawtTxPageFile)pf).performBatches();
 
         // We should see them now.
-        assertEquals("Good", load(pff.getPageFile(), 0));
-        assertEquals("Bye", load(pff.getPageFile(), 1));
+        assertEquals("Good", load(getRawPageFile(), 0));
+        assertEquals("Bye", load(getRawPageFile(), 1));
     }
 
     @Test

@@ -47,11 +47,14 @@ import org.fusesource.hawtdb.util.marshaller.ObjectMarshaller;
  */
 public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
 
-    private Marshaller<Key> keyMarshaller;
-    private Marshaller<Value> valueMarshaller;
+    private Marshaller<Key> keyMarshaller = new ObjectMarshaller<Key>();
+    private Marshaller<Value> valueMarshaller = new ObjectMarshaller<Value>();
     private boolean deferredEncoding=true;
     private Prefixer<Key> prefixer;
 
+    /**
+     * Creates a new BTree index on the Paged object at the given page location.
+     */
     public Index<Key, Value> create(Paged paged, int page) {
         BTreeIndex<Key, Value> index = createInstance(paged, page);
         index.create();
@@ -63,42 +66,75 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
         return "{ deferredEncoding: "+deferredEncoding+" }";
     }
     
+    /**
+     * Loads an existing BTree index from the paged object at the given page location.
+     */
     public Index<Key, Value> open(Paged paged, int page) {
         return createInstance(paged, page);
     }
 
     private BTreeIndex<Key, Value> createInstance(Paged paged, int page) {
-        if (keyMarshaller == null) {
-            keyMarshaller = new ObjectMarshaller<Key>();
-        }
-        if (valueMarshaller == null) {
-            valueMarshaller = new ObjectMarshaller<Value>();
-        }
         return new BTreeIndex<Key, Value>(paged, page, this);
     }
 
+    /**
+     * Defaults to an {@link ObjectMarshaller} if not explicitly set.
+     * 
+     * @return the marshaller used for keys.
+     */
     public Marshaller<Key> getKeyMarshaller() {
         return keyMarshaller;
     }
 
-    public void setKeyMarshaller(Marshaller<Key> keyMarshaller) {
-        this.keyMarshaller = keyMarshaller;
+    /**
+     * Allows you to configure custom marshalling logic to encode the index keys.
+     * 
+     * @param marshaller the marshaller used for keys.
+     */
+    public void setKeyMarshaller(Marshaller<Key> marshaller) {
+        this.keyMarshaller = marshaller;
     }
 
+    /**
+     * Defaults to an {@link ObjectMarshaller} if not explicitly set.
+     *  
+     * @return the marshaller used for values.
+     */
     public Marshaller<Value> getValueMarshaller() {
         return valueMarshaller;
     }
 
-    public void setValueMarshaller(Marshaller<Value> valueMarshaller) {
-        this.valueMarshaller = valueMarshaller;
+    /**
+     * Allows you to configure custom marshalling logic to encode the index values.
+     * 
+     * @param marshaller the marshaller used for values
+     */
+    public void setValueMarshaller(Marshaller<Value> marshaller) {
+        this.valueMarshaller = marshaller;
     }
 
+    /**
+     * 
+     * @return true if deferred encoding enabled
+     */
     public boolean isDeferredEncoding() {
         return deferredEncoding;
     }
 
-    public void setDeferredEncoding(boolean deferredEncoding) {
-        this.deferredEncoding = deferredEncoding;
+    /**
+     * <p>
+     * When deferred encoding is enabled, the index avoids encoding keys and values
+     * for as long as possible so take advantage of collapsing multiple updates of the 
+     * same key/value into a single update operation and single encoding operation.
+     * </p><p>
+     * Using this feature requires the keys and values to be immutable objects since 
+     * unexpected errors would occur if they are changed after they have been handed
+     * to to the index for storage. 
+     * </p>
+     * @param enable should deferred encoding be enabled.
+     */
+    public void setDeferredEncoding(boolean enable) {
+        this.deferredEncoding = enable;
     }
 
     public Prefixer<Key> getPrefixer() {

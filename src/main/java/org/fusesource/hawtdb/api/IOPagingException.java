@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.api;
 
 /**
+ * Exception thrown when an IOException occurs with a a Paging operation.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */

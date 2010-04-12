@@ -16,30 +16,22 @@
  */
 package org.fusesource.hawtdb.api;
 
+import java.nio.ByteBuffer;
+
 
 /**
- * Thrown when you have run out of storage space on your page file. 
+ * A page file provides paged access to a physical file.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class OutOfSpaceException extends PagingException {
+public interface PageFile extends Paged {
 
-    private static final long serialVersionUID = -886491791391276951L;
+    /**
+     * Writes a byte buffer to a page location.
+     *  
+     * @param pageId the location to write to
+     * @param buffer the buffer containing the data to write.
+     */
+    public void write(int pageId, ByteBuffer buffer);
 
-    public OutOfSpaceException() {
-        super();
-    }
-
-    public OutOfSpaceException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public OutOfSpaceException(String message) {
-        super(message);
-    }
-
-    public OutOfSpaceException(Throwable cause) {
-        super(cause);
-    }
-    
 }

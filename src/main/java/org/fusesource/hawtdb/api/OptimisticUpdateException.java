@@ -17,6 +17,8 @@
 package org.fusesource.hawtdb.api;
 
 /**
+ * Thrown when transactional operation fails to apply because another transaction has already updated the values
+ * there were seem and are being updated by the current transaction. 
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */

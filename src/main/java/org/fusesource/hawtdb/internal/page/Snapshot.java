@@ -34,11 +34,11 @@ package org.fusesource.hawtdb.internal.page;
  */
 final class Snapshot {
 
-    private final HawtPageFile parent;
+    private final HawtTxPageFile parent;
     private final SnapshotHead head;
     private final Batch base;
     
-    public  Snapshot(HawtPageFile hawtPageFile, SnapshotHead head, Batch base) {
+    public  Snapshot(HawtTxPageFile hawtPageFile, SnapshotHead head, Batch base) {
         parent = hawtPageFile;
         this.head = head;
         this.base = base;

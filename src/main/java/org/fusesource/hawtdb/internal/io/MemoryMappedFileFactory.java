@@ -27,9 +27,8 @@ import java.io.IOException;
 public class MemoryMappedFileFactory {
     
     private MemoryMappedFile memoryMappedFile;
-    
-    protected File file;
-    protected int mappingSegementSize=1024*1024*64;
+    private File file;
+    private int mappingSegementSize=1024*1024*64;
     
     public void open() throws IOException {
         if( memoryMappedFile == null ) {

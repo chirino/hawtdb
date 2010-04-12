@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.api;
 
 /**
+ * The root of all exceptions thrown by all {@link Paged} object operations.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */

@@ -17,7 +17,8 @@
 package org.fusesource.hawtdb.api;
 
 /**
- * Interface used to determine the simple prefix of two keys.
+ * Interface used to determine the simple prefix of two keys.  Used by BTree indexes
+ * to implement the variable magnitude optimization.
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */

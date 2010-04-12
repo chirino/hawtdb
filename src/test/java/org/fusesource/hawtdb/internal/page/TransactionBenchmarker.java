@@ -19,11 +19,11 @@ package org.fusesource.hawtdb.internal.page;
 import java.io.File;
 import java.util.ArrayList;
 
+import org.fusesource.hawtdb.api.TxPageFile;
+import org.fusesource.hawtdb.api.TxPageFileFactory;
 import org.fusesource.hawtdb.internal.Action;
 import org.fusesource.hawtdb.internal.Benchmarker;
 import org.fusesource.hawtdb.internal.Benchmarker.BenchmarkAction;
-import org.fusesource.hawtdb.internal.page.HawtPageFile;
-import org.fusesource.hawtdb.internal.page.HawtPageFileFactory;
 import org.fusesource.hawtdb.metric.MetricCounter;
 
 /**
@@ -34,24 +34,24 @@ public class TransactionBenchmarker<A extends TransactionActor<A>> {
     
     
     public interface Callback {
-        public void run(HawtPageFileFactory pff) throws Exception;
+        public void run(TxPageFileFactory pff) throws Exception;
     }
     
     private Callback setup;
     private Callback tearDown;
     private int samples = 3;
     private int period = 1000*5;
-    private HawtPageFileFactory hawtPageFileFactory;
+    private TxPageFileFactory hawtPageFileFactory;
     
     public void benchmark(int actorCount, BenchmarkAction<A> action) throws Exception {
-        HawtPageFileFactory pff = getHawtPageFileFactory();
+        TxPageFileFactory pff = getHawtPageFileFactory();
         pff.getFile().delete();
         pff.open();
         try {
             if( setup!=null ) {
                 setup.run(pff);
             }
-            HawtPageFile pf = pff.getHawtPageFile();
+            TxPageFile pf = pff.getTxPageFile();
             Benchmarker benchmark = new Benchmarker();
             benchmark.setSamples(samples);
             benchmark.setPeriod(period);
@@ -76,7 +76,7 @@ public class TransactionBenchmarker<A extends TransactionActor<A>> {
         return metrics;
     }
 
-    protected ArrayList<A> createActors(HawtPageFile pageFile, int count, Action<A> action) {
+    protected ArrayList<A> createActors(TxPageFile pageFile, int count, Action<A> action) {
         ArrayList<A> actors = new ArrayList<A>();
         for (int i = 0; i < count; i++) {
             A actor = createActor(pageFile, action, i);
@@ -89,7 +89,7 @@ public class TransactionBenchmarker<A extends TransactionActor<A>> {
     }
 
     @SuppressWarnings("unchecked")
-    protected A createActor(HawtPageFile pageFile, Action<A> action, int i) {
+    protected A createActor(TxPageFile pageFile, Action<A> action, int i) {
         return (A) new TransactionActor();
     }
 
@@ -125,12 +125,12 @@ public class TransactionBenchmarker<A extends TransactionActor<A>> {
         this.period = period;
     }
 
-    public void setHawtPageFileFactory(HawtPageFileFactory hawtPageFileFactory) {
+    public void setHawtPageFileFactory(TxPageFileFactory hawtPageFileFactory) {
         this.hawtPageFileFactory = hawtPageFileFactory;
     }
-    public HawtPageFileFactory getHawtPageFileFactory() {
+    public TxPageFileFactory getHawtPageFileFactory() {
         if( hawtPageFileFactory==null ) {
-            hawtPageFileFactory = new HawtPageFileFactory();
+            hawtPageFileFactory = new TxPageFileFactory();
             hawtPageFileFactory.setFile(new File("target/test-data/" + getClass().getName() + ".db"));
         }
         return hawtPageFileFactory;

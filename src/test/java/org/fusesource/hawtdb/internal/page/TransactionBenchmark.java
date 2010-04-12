@@ -18,11 +18,11 @@ package org.fusesource.hawtdb.internal.page;
 
 import java.util.Random;
 
+import org.fusesource.hawtdb.api.TxPageFile;
+import org.fusesource.hawtdb.api.TxPageFileFactory;
 import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtdb.internal.Action;
 import org.fusesource.hawtdb.internal.Benchmarker.BenchmarkAction;
-import org.fusesource.hawtdb.internal.page.HawtPageFile;
-import org.fusesource.hawtdb.internal.page.HawtPageFileFactory;
 import org.fusesource.hawtdb.internal.page.TransactionBenchmarker.Callback;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class TransactionBenchmark {
     }
     
     TransactionBenchmarker<RandomTxActor> benchmark = new TransactionBenchmarker<RandomTxActor>() {
-        protected RandomTxActor createActor(HawtPageFile pageFile, Action<RandomTxActor> action, int i) {
+        protected RandomTxActor createActor(TxPageFile pageFile, Action<RandomTxActor> action, int i) {
             return new RandomTxActor();
         };
     };
@@ -93,8 +93,8 @@ public class TransactionBenchmark {
     
     private void preallocate(final int INITIAL_PAGE_COUNT) {
         benchmark.setSetup(new Callback(){
-            public void run(HawtPageFileFactory pff) throws Exception {
-                Transaction tx = pff.getHawtPageFile().tx();
+            public void run(TxPageFileFactory pff) throws Exception {
+                Transaction tx = pff.getTxPageFile().tx();
                 for (int i = 0; i < INITIAL_PAGE_COUNT; i++) {
                     int page = tx.allocator().alloc(1);
                     tx.write(page, new Buffer(THE_DATA));

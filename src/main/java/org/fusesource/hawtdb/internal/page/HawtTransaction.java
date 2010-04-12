@@ -25,6 +25,7 @@ import org.fusesource.hawtdb.api.IOPagingException;
 import org.fusesource.hawtdb.api.OutOfSpaceException;
 import org.fusesource.hawtdb.api.PagingException;
 import org.fusesource.hawtdb.api.Transaction;
+import org.fusesource.hawtdb.internal.util.Ranges;
 import org.fusesource.hawtdb.util.StringSupport;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 
@@ -40,12 +41,12 @@ final class HawtTransaction implements Transaction {
     /**
      * 
      */
-    private final HawtPageFile parent;
+    private final HawtTxPageFile parent;
 
     /**
      * @param concurrentPageFile
      */
-    HawtTransaction(HawtPageFile concurrentPageFile) {
+    HawtTransaction(HawtTxPageFile concurrentPageFile) {
         parent = concurrentPageFile;
     }
 
@@ -90,6 +91,10 @@ final class HawtTransaction implements Transaction {
 
         public boolean isAllocated(int page) {
             return HawtTransaction.this.parent.allocator.isAllocated(page);
+        }
+
+        public void copy(Ranges freeList) {
+            throw new UnsupportedOperationException();
         }
 
     };
