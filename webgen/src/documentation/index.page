@@ -1,6 +1,6 @@
 ---
 title: Documentation
-in_menu: true
+in_menu: false
 sort_info: 2
 --- name:overview
 # HawtDB Developers Guide

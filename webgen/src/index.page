@@ -166,3 +166,6 @@ Example:
 {pygmentize:: java}
 indexFactory.setDeferredEncoding(true);
 {pygmentize}
+
+## References
+* [Full API]({api_base:}/api/package-summary.html)
