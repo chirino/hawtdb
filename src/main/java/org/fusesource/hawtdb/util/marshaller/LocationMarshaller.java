@@ -16,43 +16,46 @@
  */
 package org.fusesource.hawtdb.util.marshaller;
 
+import org.fusesource.hawtdb.internal.journal.Location;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.fusesource.hawtdb.util.buffer.Buffer;
-
 /**
- * Implementation of a Marshaller for Buffer objects
- * 
+ * Implementation of a Marshaller for Location objects.
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
-public class VariableBufferMarshaller extends VariableMarshaller<Buffer> {
-    
-    static public final VariableBufferMarshaller INSTANCE = new VariableBufferMarshaller();
+public class LocationMarshaller implements Marshaller<Location> {
 
-    public void writePayload(Buffer value, DataOutput dataOut) throws IOException {
-        dataOut.writeInt(value.length);
-        dataOut.write(value.data, value.offset, value.length);
+    public static final LocationMarshaller INSTANCE = new LocationMarshaller();
+
+    public void writePayload(Location object, DataOutput dataOut) throws IOException {
+        dataOut.writeInt(object.getDataFileId());
+        dataOut.writeInt(object.getOffset());
     }
 
-    public Buffer readPayload(DataInput dataIn) throws IOException {
-        int size = dataIn.readInt();
-        byte[] data = new byte[size];
-        dataIn.readFully(data);
-        return new Buffer(data);
+    public Location readPayload(DataInput dataIn) throws IOException {
+        int fileId = dataIn.readInt();
+        int offset = dataIn.readInt();
+        return new Location(fileId, offset);
     }
-    
-    public Buffer deepCopy(Buffer source) {
-        return source.deepCopy();
+
+    public int getFixedSize() {
+        return 8;
+    }
+
+    public Location deepCopy(Location source) {
+        return new Location(source);
     }
 
     public boolean isDeepCopySupported() {
         return true;
     }
 
-    public int estimatedSize(Buffer object) {
-        return object.length+4;
+    public int estimatedSize(Location object) {
+        return 8;
     }
-    
 }

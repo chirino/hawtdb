@@ -23,12 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.fusesource.hawtdb.api.BTreeIndexFactory;
-import org.fusesource.hawtdb.api.Index;
-import org.fusesource.hawtdb.api.IndexException;
-import org.fusesource.hawtdb.api.IndexVisitor;
-import org.fusesource.hawtdb.api.Paged;
-import org.fusesource.hawtdb.api.Prefixer;
+import org.fusesource.hawtdb.api.*;
 import org.fusesource.hawtdb.internal.index.BTreeNode.Data;
 import org.fusesource.hawtdb.internal.page.Extent;
 import org.fusesource.hawtdb.util.buffer.Buffer;
@@ -43,7 +38,7 @@ import org.fusesource.hawtdb.util.marshaller.Marshaller;
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class BTreeIndex<Key, Value> implements Index<Key, Value> {
+public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
 
     private final BTreeNode.DataEncoderDecoder<Key, Value> DATA_ENCODER_DECODER = new BTreeNode.DataEncoderDecoder<Key, Value>(this);
 
@@ -122,6 +117,10 @@ public class BTreeIndex<Key, Value> implements Index<Key, Value> {
 
     public Iterator<Map.Entry<Key, Value>> iterator() {
         return root().iterator(this);
+    }
+
+    public Iterator<Map.Entry<Key, Value>> iterator(Predicate<Key> predicate) {
+        return root().iterator(this, predicate);
     }
 
     public Iterator<Map.Entry<Key, Value>> iterator(final Key initialKey) {
@@ -248,7 +247,7 @@ public class BTreeIndex<Key, Value> implements Index<Key, Value> {
                 DATA_ENCODER_DECODER.remove(paged, node.page);
             }
         }
-        paged.allocator().free(node.page, 1);
+        paged.free(node.page);
     }
 
     // /////////////////////////////////////////////////////////////////

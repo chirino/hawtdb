@@ -294,7 +294,7 @@ public class ConcurrentPageFileTest {
         for (Integer page : new ArrayList<Integer>(allocations)) {
             String t = (String) load(tx, page);
             if (!expected.contains(t)) {
-                tx.allocator().free(page, 1);
+                tx.free(page);
                 allocations.remove(page);
             }
         }

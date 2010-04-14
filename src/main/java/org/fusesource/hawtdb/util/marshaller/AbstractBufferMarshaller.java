@@ -20,41 +20,39 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.fusesource.hawtdb.util.buffer.Buffer;
+
 /**
- * Implementation of a Marshaller for byte arrays
+ * Implementation of a Marshaller for Buffer objects
  * 
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class BytesMarshaller implements Marshaller<byte[]> {
+abstract public class AbstractBufferMarshaller<T extends Buffer> extends VariableMarshaller<T> {
 
-    public static final BytesMarshaller INSTANCE = new BytesMarshaller();
-
-    public void writePayload(byte[] data, DataOutput dataOut) throws IOException {
-        dataOut.writeInt(data.length);
-        dataOut.write(data);
+    public void writePayload(T value, DataOutput dataOut) throws IOException {
+        dataOut.writeInt(value.length);
+        dataOut.write(value.data, value.offset, value.length);
     }
 
-    public byte[] readPayload(DataInput dataIn) throws IOException {
+    public T readPayload(DataInput dataIn) throws IOException {
         int size = dataIn.readInt();
         byte[] data = new byte[size];
         dataIn.readFully(data);
-        return data;
-    }
-    
-    public int getFixedSize() {
-        return -1;
+        return createBuffer(data);
     }
 
-    public byte[] deepCopy(byte[] source) {
-        byte []rc = new byte[source.length];
-        System.arraycopy(source, 0, rc, 0, source.length);
-        return rc;
+    abstract protected T createBuffer(byte [] data);
+    
+    public T deepCopy(T source) {
+        return createBuffer(source.deepCopy().data);
     }
 
     public boolean isDeepCopySupported() {
         return true;
     }
 
-    public int estimatedSize(byte[] object) {
+    public int estimatedSize(T object) {
         return object.length+4;
     }
+    
 }

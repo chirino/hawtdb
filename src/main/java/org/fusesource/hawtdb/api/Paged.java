@@ -38,6 +38,11 @@ public interface Paged {
      */
     int alloc();
 
+    /**
+     * does the same as allocator().free(page, 1)
+     */
+    void free(int page);
+
     enum SliceType {
         READ, WRITE, READ_WRITE
     }

@@ -170,6 +170,10 @@ final class HawtTransaction implements Transaction {
         return allocator().alloc(1);
     }
 
+    public void free(int page) {
+        allocator().free(page, 1);
+    }
+
     public void read(int page, Buffer buffer) throws IOPagingException {
         // We may need to translate the page due to an update..
         Update update = updates == null ? null : updates.get(page);

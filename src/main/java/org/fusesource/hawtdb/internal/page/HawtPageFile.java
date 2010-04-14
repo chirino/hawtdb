@@ -56,8 +56,12 @@ public class HawtPageFile implements PageFile {
     public int alloc() {
         return allocator().alloc(1);
     }
-    
-	public void read(int pageId, Buffer buffer) {
+
+    public void free(int page) {
+        allocator().free(page, 1);
+    }
+
+    public void read(int pageId, Buffer buffer) {
 		file.read(offset(pageId), buffer);
 	}
 

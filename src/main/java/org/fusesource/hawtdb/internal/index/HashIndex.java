@@ -26,14 +26,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.fusesource.hawtdb.api.BTreeIndexFactory;
-import org.fusesource.hawtdb.api.EncoderDecoder;
-import org.fusesource.hawtdb.api.HashIndexFactory;
-import org.fusesource.hawtdb.api.IOPagingException;
-import org.fusesource.hawtdb.api.Index;
-import org.fusesource.hawtdb.api.IndexException;
-import org.fusesource.hawtdb.api.IndexVisitor;
-import org.fusesource.hawtdb.api.Paged;
+import org.fusesource.hawtdb.api.*;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 import org.fusesource.hawtdb.util.buffer.DataByteArrayInputStream;
 import org.fusesource.hawtdb.util.buffer.DataByteArrayOutputStream;
@@ -151,15 +144,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             changeCapacity(initialBucketCapacity);
         }
     }
-    
-    public Iterator<Entry<Key, Value>> iterator() throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
-    }
 
-    public void visit(IndexVisitor<Key, Value> visitor) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
-    }
-    
     public int size() {
         int rc=0;
         for (int i = 0; i < buckets.capacity; i++) {
@@ -191,7 +176,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
 
         // Copy the data from the old buckets to the new buckets.
         for (int i = 0; i < buckets.capacity; i++) {
-            Index<Key, Value> bin = buckets.bucket(i);
+            SortedIndex<Key, Value> bin = buckets.bucket(i);
             HashSet<Integer> activeBuckets = new HashSet<Integer>();
             for (Map.Entry<Key, Value> entry : bin) {
                 Key key = entry.getKey();
@@ -282,11 +267,11 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             index.buckets.calcThresholds();
         }
         
-        Index<Key,Value> bucket(int bucket) {
+        SortedIndex<Key,Value> bucket(int bucket) {
             return index.BIN_FACTORY.open(index.paged, bucketsPage+bucket);
         }
 
-        Index<Key,Value> bucket(Key key) {
+        SortedIndex<Key,Value> bucket(Key key) {
             int i = index(key);
             return index.BIN_FACTORY.open(index.paged, bucketsPage+i);
         }

@@ -21,61 +21,50 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Provides Key/Value storage and retrieval. 
- * 
+ * Provides Key/Value storage and retrieval.
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public interface Index<Key,Value> {
+public interface SortedIndex<Key,Value> extends Index<Key,Value>, Iterable<Map.Entry<Key, Value>> {
 
     /**
-     * Frees any extra storage that the index created.
+     * @return
+     * @throws IOException
      */
-    void destroy();
-    
+    public Iterator<Map.Entry<Key,Value>> iterator();
+
     /**
-     * clear the index
+     * @return
+     * @throws IOException
+     */
+    public Iterator<Map.Entry<Key,Value>> iterator(Predicate<Key> predicate);
+
+    /**
      * 
-     * @throws IOException
-     * 
+     * @param initialKey
+     * @return
      */
-    void clear();
+    public Iterator<Map.Entry<Key, Value>> iterator(Key initialKey);
+
 
     /**
-     * @param key
-     * @return true if it contains the key
-     * @throws IOException
+     * Traverses the visitor over the stored entries in this index.  The visitor can control
+     * which keys and values are visited.
+     *
+     * @param visitor
      */
-    boolean containsKey(Key key);
+    public void visit(IndexVisitor<Key, Value> visitor);
 
     /**
-     * remove the index key
-     * 
-     * @param key
-     * @return StoreEntry removed
-     * @throws IOException
+     *
+     * @return the first key/value pair in the index or null if empty.
      */
-    Value remove(Key key);
+    public Map.Entry<Key, Value> getFirst();
 
     /**
-     * store the key, item
-     * 
-     * @param key
-     * @param entry
-     * @throws IOException
+     * @return the last key/value pair in the index or null if empty.
      */
-    Value put(Key key, Value entry);
+    public Map.Entry<Key, Value> getLast();
 
-    /**
-     * @param key
-     * @return the entry
-     * @throws IOException
-     */
-    Value get(Key key);
-    
-    int size();
-    
-    boolean isEmpty();
-    
-    int getPage();
 
 }

@@ -55,7 +55,7 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     /**
      * Creates a new BTree index on the Paged object at the given page location.
      */
-    public Index<Key, Value> create(Paged paged, int page) {
+    public SortedIndex<Key, Value> create(Paged paged, int page) {
         BTreeIndex<Key, Value> index = createInstance(paged, page);
         index.create();
         return index;
@@ -69,7 +69,7 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     /**
      * Loads an existing BTree index from the paged object at the given page location.
      */
-    public Index<Key, Value> open(Paged paged, int page) {
+    public SortedIndex<Key, Value> open(Paged paged, int page) {
         return createInstance(paged, page);
     }
 

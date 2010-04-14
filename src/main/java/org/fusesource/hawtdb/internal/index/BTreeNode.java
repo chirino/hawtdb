@@ -23,20 +23,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import org.fusesource.hawtdb.api.EncoderDecoder;
-import org.fusesource.hawtdb.api.IndexException;
-import org.fusesource.hawtdb.api.IndexVisitor;
-import org.fusesource.hawtdb.api.Paged;
-import org.fusesource.hawtdb.api.Prefixer;
-import org.fusesource.hawtdb.internal.page.Extent;
-import org.fusesource.hawtdb.internal.page.ExtentInputStream;
-import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
-import org.fusesource.hawtdb.internal.util.Ranges;
+import org.fusesource.hawtdb.api.*;
 import org.fusesource.hawtdb.util.buffer.Buffer;
 
 
@@ -55,7 +45,7 @@ public final class BTreeNode<Key, Value> {
     
     public static final Buffer BRANCH_MAGIC = new Buffer(new byte[]{ 'b', 'b'});
     public static final Buffer LEAF_MAGIC = new Buffer(new byte[]{ 'b', 'l'});
-    
+
     /**
      * This is the persistent data of each node.  Declared immutable so that 
      * it can behave nicely in the page cache.  
@@ -226,59 +216,21 @@ public final class BTreeNode<Key, Value> {
         return new Data<Key, Value>(keys, children, values, next);
     }
     
-    static public class DataEncoderDecoder<Key, Value> implements EncoderDecoder<Data<Key, Value>> {
+    static public class DataEncoderDecoder<Key, Value> extends AbstractStreamEncoderDecoder<Data<Key, Value>> {
         private final BTreeIndex<Key, Value> index;
 
         public DataEncoderDecoder(BTreeIndex<Key, Value> index) {
             this.index = index;
         }
 
-        public List<Integer> store(Paged paged, int page, Data<Key, Value> data) {
-            short count = (short) data.keys.length; // cast may truncate value...
-            if (count != data.keys.length) {
-                throw new IndexException("Too many keys");
-            }
-
-            // The node will be stored in an extent. This allows us to easily
-            // support huge nodes.
-            // The first extent is only 1 page long, extents linked off
-            // the first page will be up to 128 pages long.
-            ExtentOutputStream eos = new ExtentOutputStream(paged, page, (short) 1, (short) 128);
-            DataOutputStream os = new DataOutputStream(eos);
-            try {
-                write(os, index, data);
-                os.close();
-            } catch (IOException e) {
-                throw new IndexException(e);
-            }
-
-            Ranges pages = eos.getPages();
-            pages.remove(page);
-            if (pages.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            return pages.values();
+        @Override
+        protected void encode(Paged paged, DataOutputStream os, Data<Key, Value> data) throws IOException {
+            write(os, index, data);
         }
 
-        public Data<Key, Value> load(Paged paged, int page) {
-            ExtentInputStream eis = new ExtentInputStream(paged, page);
-            DataInputStream is = new DataInputStream(eis);
-            try {
-                return read(is, index);
-            } catch (IOException e) {
-                throw new IndexException(e);
-            } finally {
-                try {
-                    is.close();
-                } catch (Throwable ignore) {
-                }
-            }
-
-        }
-
-        public List<Integer> remove(Paged paged, int page) {
-            return Extent.freeLinked(paged, page);
+        @Override
+        protected Data<Key, Value> decode(Paged paged, DataInputStream is) throws IOException {
+            return read(is, index);
         }
 
     }
@@ -309,7 +261,7 @@ public final class BTreeNode<Key, Value> {
      * 
      * @throws IOException
      */
-    private BTreeNode<Key, Value> getChild(BTreeIndex<Key, Value> index, int idx) {
+    BTreeNode<Key, Value> getChild(BTreeIndex<Key, Value> index, int idx) {
         if (data.isBranch() && idx >= 0 && idx < data.children.length) {
             BTreeNode<Key, Value> result = index.loadNode(this, data.children[idx]);
             return result;
@@ -683,6 +635,12 @@ public final class BTreeNode<Key, Value> {
             node = node.getChild(index, 0);
         }
         return node;
+    }
+
+
+    public Iterator<Map.Entry<Key,Value>> iterator(BTreeIndex<Key, Value> index, Predicate<Key> predicate) {
+        return new BTreePredicateIterator<Key,Value>(index, this, predicate);
+
     }
 
     public Iterator<Map.Entry<Key, Value>> iterator(BTreeIndex<Key, Value> index, final Key startKey) {
