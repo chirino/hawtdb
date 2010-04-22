@@ -104,7 +104,8 @@ public final class HawtTxPageFile implements TxPageFile {
         public String toString() { 
             return "{ base_revision: "+this.base_revision+
             ", page_size: "+page_size+", free_list_page: "+free_list_page+
-            ", storing batch: "+storing_batch_page+ // ", checksum: "+checksum+
+            ", stored_batch_page: "+stored_batch_page+
+            ", storing_batch_page: "+storing_batch_page+ 
             " }";
         }
         
@@ -302,7 +303,6 @@ public final class HawtTxPageFile implements TxPageFile {
      * 
      * @param snapshot
      * @param pageUpdates
-     * @param deferredUpdates
      */
     void commit(Snapshot snapshot, ConcurrentHashMap<Integer, Update> pageUpdates) {
         
@@ -397,6 +397,7 @@ public final class HawtTxPageFile implements TxPageFile {
             header.base_revision = -1;
             header.free_list_page = -1;
             header.page_size = pageFile.getPageSize();
+            header.stored_batch_page = -1;
             header.storing_batch_page = -1;
             storeHeader();
         }
@@ -417,7 +418,7 @@ public final class HawtTxPageFile implements TxPageFile {
             Buffer buffer = new Buffer(FILE_HEADER_SIZE);
             file.read(0, buffer);
             header.decode(buffer);
-            
+
             if( !Arrays.equals(MAGIC, header.magic) ) {
                 throw new PagingException("The file header is not of the expected type.");
             }
@@ -451,8 +452,8 @@ public final class HawtTxPageFile implements TxPageFile {
                     // TODO: when consistencyCheckNeeded==true, then we need to check the
                     // Consistency of the batch, as it may have been partially written to disk.
                 }
-                
-                
+
+
                 Batch batch = loadObject(pageId); 
                 batch.page = pageId;
                 batch.recovered = true;
