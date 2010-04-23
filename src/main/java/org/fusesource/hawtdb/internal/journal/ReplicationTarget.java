@@ -16,7 +16,7 @@
  */
 package org.fusesource.hawtdb.internal.journal;
 
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * 

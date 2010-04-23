@@ -19,7 +19,7 @@ package org.fusesource.hawtdb.internal.index;
 import org.fusesource.hawtdb.api.HashIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.Transaction;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtdb.util.marshaller.FixedBufferMarshaller;
 import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
 

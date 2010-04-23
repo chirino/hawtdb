@@ -25,8 +25,8 @@ import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
 import org.fusesource.hawtdb.util.IOHelper;
-import org.fusesource.hawtdb.util.buffer.Buffer;
-import org.fusesource.hawtdb.util.buffer.DataByteArrayOutputStream;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtdb.util.list.LinkedNode;
 import org.fusesource.hawtdb.util.list.LinkedNodeList;
 

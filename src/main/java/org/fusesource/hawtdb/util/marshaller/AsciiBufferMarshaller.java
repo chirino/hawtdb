@@ -16,7 +16,7 @@
  */
 package org.fusesource.hawtdb.util.marshaller;
 
-import org.fusesource.hawtdb.util.buffer.AsciiBuffer;
+import org.fusesource.hawtbuf.AsciiBuffer;
 
 /**
  * Implementation of a Marshaller for AsciiBuffer objects.

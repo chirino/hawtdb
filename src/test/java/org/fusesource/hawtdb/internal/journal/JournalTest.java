@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import org.fusesource.hawtdb.internal.journal.Journal;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * 

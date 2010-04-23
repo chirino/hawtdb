@@ -32,7 +32,7 @@ import java.util.HashSet;
 
 import org.fusesource.hawtdb.api.IOPagingException;
 import org.fusesource.hawtdb.util.IOHelper;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * Provides Memory Mapped access to a file.  It manages pooling the 

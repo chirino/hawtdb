@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import org.fusesource.hawtdb.api.EncoderDecoder;
 import org.fusesource.hawtdb.api.PageFile;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 
 /**

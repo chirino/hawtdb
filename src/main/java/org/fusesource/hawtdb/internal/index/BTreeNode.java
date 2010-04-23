@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.fusesource.hawtdb.api.*;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 
 /**

@@ -32,9 +32,13 @@
   <properties>
     <forge-project-id>hawtdb</forge-project-id>
     <forge-project-id-uc>HAWTDB</forge-project-id-uc>
-    
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <release-altGitURL>scm:git:ssh://git@forge.fusesource.com/${forge-project-id}.git</release-altGitURL>
+
+    <hawtbuf-version>1.0-SNAPSHOT</hawtbuf-version>
+    <commons-logging-version>1.1</commons-logging-version>
+    <junit-version>4.7</junit-version>
+    <log4j-version>1.2.14</log4j-version>
   </properties>
 
   <url>http://${forge-project-id}.fusesource.org</url>
@@ -358,9 +362,15 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.fusesource.hawtbuf</groupId>
+      <artifactId>hawtbuf-core</artifactId>
+      <version>${hawtbuf-version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
-      <version>1.1</version>
+      <version>${commons-logging-version}</version>
       <exclusions>
         <exclusion>
           <groupId>avalon-framework</groupId>
@@ -384,13 +394,13 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.7</version>
+      <version>${junit-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <version>1.2.14</version>
+      <version>${log4j-version}</version>
       <scope>test</scope>
     </dependency>
 

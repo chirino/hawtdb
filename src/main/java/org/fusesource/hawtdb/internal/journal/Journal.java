@@ -40,8 +40,8 @@ import org.apache.commons.logging.LogFactory;
 import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteCommand;
 import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteKey;
 import org.fusesource.hawtdb.util.Scheduler;
-import org.fusesource.hawtdb.util.buffer.Buffer;
-import org.fusesource.hawtdb.util.buffer.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.hawtdb.util.list.LinkedNodeList;
 
 /**

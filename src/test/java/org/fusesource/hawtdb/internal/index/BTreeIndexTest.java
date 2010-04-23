@@ -28,7 +28,7 @@ import org.fusesource.hawtdb.api.BTreeIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.IndexVisitor;
 import org.fusesource.hawtdb.internal.index.BTreeIndex;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
 import org.fusesource.hawtdb.util.marshaller.StringMarshaller;
 import org.junit.Before;

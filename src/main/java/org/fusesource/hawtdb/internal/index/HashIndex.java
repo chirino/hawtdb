@@ -27,9 +27,9 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.fusesource.hawtdb.api.*;
-import org.fusesource.hawtdb.util.buffer.Buffer;
-import org.fusesource.hawtdb.util.buffer.DataByteArrayInputStream;
-import org.fusesource.hawtdb.util.buffer.DataByteArrayOutputStream;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 
 
 /**

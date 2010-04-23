@@ -18,7 +18,7 @@ package org.fusesource.hawtdb.api;
 
 import java.nio.ByteBuffer;
 
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * Implemented by objects which provides block io access to pages on file.

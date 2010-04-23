@@ -27,7 +27,7 @@ import org.fusesource.hawtdb.api.PagingException;
 import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtdb.internal.util.Ranges;
 import org.fusesource.hawtdb.util.StringSupport;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 import static org.fusesource.hawtdb.internal.page.DeferredUpdate.*;
 

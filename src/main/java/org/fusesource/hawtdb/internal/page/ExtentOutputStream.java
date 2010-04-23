@@ -21,7 +21,7 @@ import java.io.OutputStream;
 
 import org.fusesource.hawtdb.api.Paged;
 import org.fusesource.hawtdb.internal.util.Ranges;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 
 /**

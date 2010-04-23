@@ -16,7 +16,7 @@
  */
 package org.fusesource.hawtdb.util.marshaller;
 
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * Implementation of a Marshaller for Buffer objects.

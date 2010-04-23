@@ -42,9 +42,9 @@ import org.fusesource.hawtdb.api.Paged.SliceType;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
 import org.fusesource.hawtdb.internal.util.Ranges;
 import org.fusesource.hawtdb.util.LRUCache;
-import org.fusesource.hawtdb.util.buffer.Buffer;
-import org.fusesource.hawtdb.util.buffer.DataByteArrayInputStream;
-import org.fusesource.hawtdb.util.buffer.DataByteArrayOutputStream;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtdb.util.list.LinkedNodeList;
 
 /**

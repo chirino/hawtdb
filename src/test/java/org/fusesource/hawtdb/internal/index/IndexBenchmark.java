@@ -28,7 +28,7 @@ import org.fusesource.hawtdb.internal.Action;
 import org.fusesource.hawtdb.internal.Benchmarker.BenchmarkAction;
 import org.fusesource.hawtdb.internal.page.TransactionActor;
 import org.fusesource.hawtdb.internal.page.TransactionBenchmarker;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 import org.junit.Test;
 
 /**

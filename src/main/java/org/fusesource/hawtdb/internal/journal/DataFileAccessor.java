@@ -23,7 +23,7 @@ import java.util.Map;
 import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteCommand;
 import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteKey;
 import org.fusesource.hawtdb.util.IOHelper;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * Optimized Store reader and updater. Single threaded and synchronous. Use in

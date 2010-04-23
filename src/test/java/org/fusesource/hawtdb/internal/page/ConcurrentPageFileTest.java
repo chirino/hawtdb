@@ -40,7 +40,7 @@ import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtdb.internal.page.ExtentInputStream;
 import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
 import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
-import org.fusesource.hawtdb.util.buffer.Buffer;
+import org.fusesource.hawtbuf.Buffer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
