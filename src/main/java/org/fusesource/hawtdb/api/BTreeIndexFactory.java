@@ -16,9 +16,9 @@
  */
 package org.fusesource.hawtdb.api;
 
+import org.fusesource.hawtbuf.codec.Codec;
 import org.fusesource.hawtdb.internal.index.BTreeIndex;
-import org.fusesource.hawtdb.util.marshaller.Marshaller;
-import org.fusesource.hawtdb.util.marshaller.ObjectMarshaller;
+import org.fusesource.hawtbuf.codec.ObjectCodec;
 
 /**
  * This object is used to create variable magnitude b+tree indexes. 
@@ -47,8 +47,8 @@ import org.fusesource.hawtdb.util.marshaller.ObjectMarshaller;
  */
 public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
 
-    private Marshaller<Key> keyMarshaller = new ObjectMarshaller<Key>();
-    private Marshaller<Value> valueMarshaller = new ObjectMarshaller<Value>();
+    private Codec<Key> keyCodec = new ObjectCodec<Key>();
+    private Codec<Value> valueCodec = new ObjectCodec<Value>();
     private boolean deferredEncoding=true;
     private Prefixer<Key> prefixer;
 
@@ -78,39 +78,39 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     }
 
     /**
-     * Defaults to an {@link ObjectMarshaller} if not explicitly set.
+     * Defaults to an {@link org.fusesource.hawtbuf.codec.ObjectCodec} if not explicitly set.
      * 
      * @return the marshaller used for keys.
      */
-    public Marshaller<Key> getKeyMarshaller() {
-        return keyMarshaller;
+    public Codec<Key> getKeyCodec() {
+        return keyCodec;
     }
 
     /**
      * Allows you to configure custom marshalling logic to encode the index keys.
      * 
-     * @param marshaller the marshaller used for keys.
+     * @param codec the marshaller used for keys.
      */
-    public void setKeyMarshaller(Marshaller<Key> marshaller) {
-        this.keyMarshaller = marshaller;
+    public void setKeyCodec(Codec<Key> codec) {
+        this.keyCodec = codec;
     }
 
     /**
-     * Defaults to an {@link ObjectMarshaller} if not explicitly set.
+     * Defaults to an {@link org.fusesource.hawtbuf.codec.ObjectCodec} if not explicitly set.
      *  
      * @return the marshaller used for values.
      */
-    public Marshaller<Value> getValueMarshaller() {
-        return valueMarshaller;
+    public Codec<Value> getValueCodec() {
+        return valueCodec;
     }
 
     /**
      * Allows you to configure custom marshalling logic to encode the index values.
      * 
-     * @param marshaller the marshaller used for values
+     * @param codec the marshaller used for values
      */
-    public void setValueMarshaller(Marshaller<Value> marshaller) {
-        this.valueMarshaller = marshaller;
+    public void setValueCodec(Codec<Value> codec) {
+        this.valueCodec = codec;
     }
 
     /**

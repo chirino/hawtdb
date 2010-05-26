@@ -16,12 +16,12 @@
  */
 package org.fusesource.hawtdb.internal.index;
 
+import org.fusesource.hawtbuf.codec.FixedBufferCodec;
+import org.fusesource.hawtbuf.codec.LongCodec;
 import org.fusesource.hawtdb.api.BTreeIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtdb.util.marshaller.FixedBufferMarshaller;
-import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
 
 /**
  * 
@@ -35,8 +35,8 @@ public class BTreeIndexBenchmark extends IndexBenchmark {
     
     protected Index<Long, Buffer> createIndex(Transaction tx) {
         BTreeIndexFactory<Long, Buffer> factory = new BTreeIndexFactory<Long, Buffer>();
-        factory.setKeyMarshaller(LongMarshaller.INSTANCE);
-        factory.setValueMarshaller(new FixedBufferMarshaller(DATA.length));
+        factory.setKeyCodec(LongCodec.INSTANCE);
+        factory.setValueCodec(new FixedBufferCodec(DATA.length));
         return factory.create(tx, tx.allocator().alloc(1));
     }
 

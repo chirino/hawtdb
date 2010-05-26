@@ -23,13 +23,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.fusesource.hawtbuf.codec.Codec;
 import org.fusesource.hawtdb.api.*;
 import org.fusesource.hawtdb.internal.index.BTreeNode.Data;
 import org.fusesource.hawtdb.internal.page.Extent;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
-import org.fusesource.hawtdb.util.marshaller.Marshaller;
 
 
 /**
@@ -44,16 +44,16 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
 
     private final Paged paged;
     private final int page;
-    private final Marshaller<Key> keyMarshaller;
-    private final Marshaller<Value> valueMarshaller;
+    private final Codec<Key> keyCodec;
+    private final Codec<Value> valueCodec;
     private final Prefixer<Key> prefixer;
     private final boolean deferredEncoding;
     
     public BTreeIndex(Paged paged, int page, BTreeIndexFactory<Key, Value> factory) {
         this.paged = paged;
         this.page = page;
-        this.keyMarshaller = factory.getKeyMarshaller();
-        this.valueMarshaller = factory.getValueMarshaller();
+        this.keyCodec = factory.getKeyCodec();
+        this.valueCodec = factory.getValueCodec();
         this.deferredEncoding = factory.isDeferredEncoding();
         this.prefixer = factory.getPrefixer();
     }
@@ -262,12 +262,12 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         return page;
     }
 
-    public Marshaller<Key> getKeyMarshaller() {
-        return keyMarshaller;
+    public Codec<Key> getKeyMarshaller() {
+        return keyCodec;
     }
 
-    public Marshaller<Value> getValueMarshaller() {
-        return valueMarshaller;
+    public Codec<Value> getValueMarshaller() {
+        return valueCodec;
     }
 
     public Prefixer<Key> getPrefixer() {

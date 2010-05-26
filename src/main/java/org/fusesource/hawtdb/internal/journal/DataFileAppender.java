@@ -121,7 +121,7 @@ class DataFileAppender {
         public final Location location;
         public final Buffer data;
         final boolean sync;
-        public final Runnable onComplete;
+        public final JournalCallback onComplete;
 
         public WriteCommand(Location location, Buffer data, boolean sync) {
             this.location = location;
@@ -130,7 +130,7 @@ class DataFileAppender {
             this.onComplete = null;
         }
 
-        public WriteCommand(Location location, Buffer data, Runnable onComplete) {
+        public WriteCommand(Location location, Buffer data, JournalCallback onComplete) {
             this.location = location;
             this.data = data;
             this.onComplete = onComplete;
@@ -140,8 +140,6 @@ class DataFileAppender {
 
     /**
      * Construct a Store writer
-     * 
-     * @param fileId
      */
     public DataFileAppender(Journal dataManager) {
         this.journal = dataManager;
@@ -149,15 +147,6 @@ class DataFileAppender {
     }
 
     /**
-     * @param type
-     * @param marshaller
-     * @param payload
-     * @param type
-     * @param sync
-     * @return
-     * @throws IOException
-     * @throws
-     * @throws
      */
     public Location storeItem(Buffer data, byte type, boolean sync) throws IOException {
 
@@ -191,7 +180,7 @@ class DataFileAppender {
         return location;
     }
 
-    public Location storeItem(Buffer data, byte type, Runnable onComplete) throws IOException {
+    public Location storeItem(Buffer data, byte type, JournalCallback onComplete) throws IOException {
         // Write the packet our internal buffer.
         int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
 
@@ -393,7 +382,7 @@ class DataFileAppender {
                     }
                     if (write.onComplete != null) {
                         try {
-                            write.onComplete.run();
+                            write.onComplete.success(write.location);
                         } catch (Throwable e) {
                             e.printStackTrace();
                         }

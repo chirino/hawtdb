@@ -14,45 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.hawtdb.util.marshaller;
+package org.fusesource.hawtdb.internal.journal;
+
+import org.fusesource.hawtbuf.codec.Codec;
+import org.fusesource.hawtdb.internal.journal.Location;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Implementation of a Marshaller for a Integer
- * 
+ * Implementation of a Marshaller for Location objects.
+ *
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
-public class IntegerMarshaller implements Marshaller<Integer> {
-    
-    public static final IntegerMarshaller INSTANCE = new IntegerMarshaller();
-    
-    public void writePayload(Integer object, DataOutput dataOut) throws IOException {
-        dataOut.writeInt(object);
+public class LocationCodec implements Codec<Location> {
+
+    public static final LocationCodec INSTANCE = new LocationCodec();
+
+    public void encode(Location object, DataOutput dataOut) throws IOException {
+        dataOut.writeInt(object.getDataFileId());
+        dataOut.writeInt(object.getOffset());
     }
 
-    public Integer readPayload(DataInput dataIn) throws IOException {
-        return dataIn.readInt();
+    public Location decode(DataInput dataIn) throws IOException {
+        int fileId = dataIn.readInt();
+        int offset = dataIn.readInt();
+        return new Location(fileId, offset);
     }
 
     public int getFixedSize() {
-        return 4;
+        return 8;
     }
 
-    
-    /** 
-     * @return the source object since integers are immutable. 
-     */
-    public Integer deepCopy(Integer source) {
-        return source;
+    public Location deepCopy(Location source) {
+        return new Location(source);
     }
 
     public boolean isDeepCopySupported() {
         return true;
     }
 
-    public int estimatedSize(Integer object) {
-        return 4;
+    public int estimatedSize(Location object) {
+        return 8;
     }
 }

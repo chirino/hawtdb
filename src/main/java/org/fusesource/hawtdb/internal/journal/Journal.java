@@ -521,7 +521,7 @@ public class Journal {
         return loc;
     }
 
-    public synchronized Location write(Buffer data, Runnable onComplete) throws IOException, IllegalStateException {
+    public synchronized Location write(Buffer data, JournalCallback onComplete) throws IOException, IllegalStateException {
         Location loc = appender.storeItem(data, Location.USER_TYPE, onComplete);
         return loc;
     }

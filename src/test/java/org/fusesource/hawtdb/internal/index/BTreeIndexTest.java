@@ -24,13 +24,12 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Map;
 
+import org.fusesource.hawtbuf.codec.LongCodec;
+import org.fusesource.hawtbuf.codec.StringCodec;
 import org.fusesource.hawtdb.api.BTreeIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.IndexVisitor;
-import org.fusesource.hawtdb.internal.index.BTreeIndex;
 import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
-import org.fusesource.hawtdb.util.marshaller.StringMarshaller;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,8 +51,8 @@ public class BTreeIndexTest extends IndexTestSupport {
     @Override
     protected Index<String, Long> createIndex(int page) {
         BTreeIndexFactory<String,Long> factory = new BTreeIndexFactory<String,Long>();
-        factory.setKeyMarshaller(StringMarshaller.INSTANCE);
-        factory.setValueMarshaller(LongMarshaller.INSTANCE);
+        factory.setKeyCodec(StringCodec.INSTANCE);
+        factory.setValueCodec(LongCodec.INSTANCE);
         factory.setDeferredEncoding(false);
         if( page==-1 ) {
             return factory.create(tx, tx.allocator().alloc(1));

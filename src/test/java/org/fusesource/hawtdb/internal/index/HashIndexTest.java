@@ -18,8 +18,8 @@ package org.fusesource.hawtdb.internal.index;
 
 import org.fusesource.hawtdb.api.HashIndexFactory;
 import org.fusesource.hawtdb.api.Index;
-import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
-import org.fusesource.hawtdb.util.marshaller.StringMarshaller;
+import org.fusesource.hawtbuf.codec.LongCodec;
+import org.fusesource.hawtbuf.codec.StringCodec;
 
 
 /**
@@ -31,8 +31,8 @@ public class HashIndexTest extends IndexTestSupport {
     @Override
     protected Index<String, Long> createIndex(int page) {
         HashIndexFactory<String,Long> factory = new HashIndexFactory<String,Long>();
-        factory.setKeyMarshaller(StringMarshaller.INSTANCE);
-        factory.setValueMarshaller(LongMarshaller.INSTANCE);
+        factory.setKeyCodec(StringCodec.INSTANCE);
+        factory.setValueCodec(LongCodec.INSTANCE);
         if( page==-1 ) {
             return factory.create(tx, tx.allocator().alloc(1));
         } else {

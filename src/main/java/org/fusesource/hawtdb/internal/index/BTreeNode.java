@@ -163,7 +163,7 @@ public final class BTreeNode<Key, Value> {
         int count = data.keys.length;
         os.writeShort(count);
         for (int i = 0; i < data.keys.length; i++) {
-            index.getKeyMarshaller().writePayload(data.keys[i], os);
+            index.getKeyMarshaller().encode(data.keys[i], os);
         }
 
         if (data.isBranch()) {
@@ -172,7 +172,7 @@ public final class BTreeNode<Key, Value> {
             }
         } else {
             for (int i = 0; i < count; i++) {
-                index.getValueMarshaller().writePayload(data.values[i], os);
+                index.getValueMarshaller().encode(data.values[i], os);
             }
             os.writeInt(data.next);
         }
@@ -198,7 +198,7 @@ public final class BTreeNode<Key, Value> {
         int next = -1;
 
         for (int i = 0; i < count; i++) {
-            keys[i] = index.getKeyMarshaller().readPayload(is);
+            keys[i] = index.getKeyMarshaller().decode(is);
         }
 
         if (branch) {
@@ -209,7 +209,7 @@ public final class BTreeNode<Key, Value> {
         } else {
             values = (Value[]) new Object[count];
             for (int i = 0; i < count; i++) {
-                values[i] = index.getValueMarshaller().readPayload(is);
+                values[i] = index.getValueMarshaller().decode(is);
             }
             next = is.readInt();
         }

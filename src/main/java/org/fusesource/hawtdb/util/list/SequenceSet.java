@@ -16,6 +16,8 @@
  */
 package org.fusesource.hawtdb.util.list;
 
+import org.fusesource.hawtbuf.codec.Codec;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -23,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.fusesource.hawtdb.util.marshaller.Marshaller;
 
 /**
  * Keeps track of a added long values. Collapses ranges of numbers using a
@@ -34,11 +35,9 @@ import org.fusesource.hawtdb.util.marshaller.Marshaller;
  */
 public class SequenceSet extends LinkedNodeList<Sequence> {
     
-    public static class Marshaller implements org.fusesource.hawtdb.util.marshaller.Marshaller<SequenceSet> {
+    public static Codec CODEC = new Codec<SequenceSet>() {
 
-        public static final Marshaller INSTANCE = new Marshaller();
-        
-        public SequenceSet readPayload(DataInput in) throws IOException {
+        public SequenceSet decode(DataInput in) throws IOException {
             SequenceSet value = new SequenceSet();
             int count = in.readInt();
             for (int i = 0; i < count; i++) {
@@ -53,7 +52,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
             return value;
         }
 
-        public void writePayload(SequenceSet value, DataOutput out) throws IOException {
+        public void encode(SequenceSet value, DataOutput out) throws IOException {
             out.writeInt(value.size());
             Sequence sequence = value.getHead();
             while (sequence != null ) {
@@ -90,7 +89,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         public int estimatedSize(SequenceSet object) {
             return object.size()*16;
         }
-    }
+    };
     
     public void add(Sequence value) {
         // TODO we can probably optimize this a bit

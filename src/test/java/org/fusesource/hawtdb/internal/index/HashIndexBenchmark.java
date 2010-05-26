@@ -16,12 +16,12 @@
  */
 package org.fusesource.hawtdb.internal.index;
 
+import org.fusesource.hawtbuf.codec.FixedBufferCodec;
 import org.fusesource.hawtdb.api.HashIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtdb.api.Transaction;
 import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtdb.util.marshaller.FixedBufferMarshaller;
-import org.fusesource.hawtdb.util.marshaller.LongMarshaller;
+import org.fusesource.hawtbuf.codec.LongCodec;
 
 
 /**
@@ -36,8 +36,8 @@ public class HashIndexBenchmark extends IndexBenchmark {
     
     protected Index<Long, Buffer> createIndex(Transaction tx) {
         HashIndexFactory<Long, Buffer> factory = new HashIndexFactory<Long, Buffer>();
-        factory.setKeyMarshaller(LongMarshaller.INSTANCE);
-        factory.setValueMarshaller(new FixedBufferMarshaller(DATA.length));
+        factory.setKeyCodec(LongCodec.INSTANCE);
+        factory.setValueCodec(new FixedBufferCodec(DATA.length));
         factory.setFixedCapacity(500);
         return factory.create(tx, tx.allocator().alloc(1));
     }

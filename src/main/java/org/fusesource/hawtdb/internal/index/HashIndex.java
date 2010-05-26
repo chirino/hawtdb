@@ -19,10 +19,8 @@ package org.fusesource.hawtdb.internal.index;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,8 +59,8 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         this.loadFactor = factory.getLoadFactor();
         this.deferredEncoding = factory.isDeferredEncoding();
         this.initialBucketCapacity = factory.getBucketCapacity();
-        this.BIN_FACTORY.setKeyMarshaller(factory.getKeyMarshaller());
-        this.BIN_FACTORY.setValueMarshaller(factory.getValueMarshaller());
+        this.BIN_FACTORY.setKeyCodec(factory.getKeyCodec());
+        this.BIN_FACTORY.setValueCodec(factory.getValueCodec());
         this.BIN_FACTORY.setDeferredEncoding(this.deferredEncoding);
         this.fixedCapacity = this.minimumBucketCapacity==this.maximumBucketCapacity && this.maximumBucketCapacity==this.initialBucketCapacity;
     }

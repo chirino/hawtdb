@@ -16,9 +16,9 @@
  */
 package org.fusesource.hawtdb.api;
 
+import org.fusesource.hawtbuf.codec.Codec;
+import org.fusesource.hawtbuf.codec.ObjectCodec;
 import org.fusesource.hawtdb.internal.index.HashIndex;
-import org.fusesource.hawtdb.util.marshaller.Marshaller;
-import org.fusesource.hawtdb.util.marshaller.ObjectMarshaller;
 
 /**
  * <p>
@@ -49,8 +49,8 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     public static final int DEFAULT_MINIMUM_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX+"DEFAULT_MINIMUM_BUCKET_CAPACITY", "16"));
     public static final int DEFAULT_LOAD_FACTOR = Integer.parseInt(System.getProperty(PROPERTY_PREFIX+"DEFAULT_LOAD_FACTOR", "75"));
     
-    private Marshaller<Key> keyMarshaller = new ObjectMarshaller<Key>();
-    private Marshaller<Value> valueMarshaller = new ObjectMarshaller<Value>();
+    private Codec<Key> keyCodec = new ObjectCodec<Key>();
+    private Codec<Value> valueCodec = new ObjectCodec<Value>();
     private int initialBucketCapacity = DEFAULT_BUCKET_CAPACITY;
     private int maximumBucketCapacity = DEFAULT_MAXIMUM_BUCKET_CAPACITY;
     private int minimumBucketCapacity = DEFAULT_MINIMUM_BUCKET_CAPACITY;
@@ -76,39 +76,39 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     }
 
     /**
-     * Defaults to an {@link ObjectMarshaller} if not explicitly set.
+     * Defaults to an {@link org.fusesource.hawtbuf.codec.ObjectCodec} if not explicitly set.
      * 
      * @return the marshaller used for keys.
      */
-    public Marshaller<Key> getKeyMarshaller() {
-        return keyMarshaller;
+    public Codec<Key> getKeyCodec() {
+        return keyCodec;
     }
 
     /**
      * Allows you to configure custom marshalling logic to encode the index keys.
      * 
-     * @param marshaller the marshaller used for keys.
+     * @param codec the marshaller used for keys.
      */
-    public void setKeyMarshaller(Marshaller<Key> marshaller) {
-        this.keyMarshaller = marshaller;
+    public void setKeyCodec(Codec<Key> codec) {
+        this.keyCodec = codec;
     }
 
     /**
-     * Defaults to an {@link ObjectMarshaller} if not explicitly set.
+     * Defaults to an {@link org.fusesource.hawtbuf.codec.ObjectCodec} if not explicitly set.
      *  
      * @return the marshaller used for values.
      */
-    public Marshaller<Value> getValueMarshaller() {
-        return valueMarshaller;
+    public Codec<Value> getValueCodec() {
+        return valueCodec;
     }
 
     /**
      * Allows you to configure custom marshalling logic to encode the index values.
      * 
-     * @param marshaller the marshaller used for values
+     * @param codec the marshaller used for values
      */
-    public void setValueMarshaller(Marshaller<Value> marshaller) {
-        this.valueMarshaller = marshaller;
+    public void setValueCodec(Codec<Value> codec) {
+        this.valueCodec = codec;
     }
 
     /**

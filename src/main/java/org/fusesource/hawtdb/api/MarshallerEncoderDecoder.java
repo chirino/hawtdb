@@ -16,7 +16,7 @@
  */
 package org.fusesource.hawtdb.api;
 
-import org.fusesource.hawtdb.util.marshaller.Marshaller;
+import org.fusesource.hawtbuf.codec.Codec;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -29,19 +29,19 @@ import java.io.IOException;
  */
 public class MarshallerEncoderDecoder<T> extends AbstractStreamEncoderDecoder<T> {
 
-    private final Marshaller<T> marshaller;
+    private final Codec<T> codec;
 
-    public MarshallerEncoderDecoder(Marshaller<T> marshaller) {
-        this.marshaller = marshaller;
+    public MarshallerEncoderDecoder(Codec<T> codec) {
+        this.codec = codec;
     }
 
     @Override
     protected void encode(Paged paged, DataOutputStream os, T data) throws IOException {
-        marshaller.writePayload(data, os);
+        codec.encode(data, os);
     }
 
     @Override
     protected T decode(Paged paged, DataInputStream is) throws IOException {
-        return marshaller.readPayload(is);
+        return codec.decode(is);
     }
 }

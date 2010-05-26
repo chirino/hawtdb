@@ -71,9 +71,9 @@ public class JournalTest extends TestCase {
         final CountDownLatch latch = new CountDownLatch(iterations);
         Buffer data = new Buffer("DATA".getBytes());
         for (int i=0; i < iterations; i++) {
-            dataManager.write(data, new Runnable() {
-                public void run() {
-                    latch.countDown();                 
+            dataManager.write(data, new JournalCallback() {
+                public void success(Location location) {
+                    latch.countDown();
                 }
             });
         }
@@ -87,9 +87,9 @@ public class JournalTest extends TestCase {
         final CountDownLatch latch = new CountDownLatch(iterations);
         Buffer data = new Buffer("DATA".getBytes());
         for (int i=0; i<iterations; i++) {
-            dataManager.write(data, new Runnable() {
-                public void run() {
-                    latch.countDown();                 
+            dataManager.write(data, new JournalCallback() {
+                public void success(Location location) {
+                    latch.countDown();
                 }
             });
         }
@@ -111,9 +111,9 @@ public class JournalTest extends TestCase {
     public void testBatchWriteToMaxMessageSize() throws Exception {
         final int iterations = 4;
         final CountDownLatch latch = new CountDownLatch(iterations);
-        Runnable done = new Runnable() {
-            public void run() {
-                latch.countDown();                 
+        JournalCallback done = new JournalCallback() {
+            public void success(Location location) {
+                latch.countDown();
             }
         };
         int messageSize = DEFAULT_MAX_BATCH_SIZE / iterations;
