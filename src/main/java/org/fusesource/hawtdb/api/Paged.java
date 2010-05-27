@@ -104,7 +104,7 @@ public interface Paged {
      * @param page
      * @return
      */
-    <T> T get(EncoderDecoder<T> encoderDecoder, int page);
+    <T> T get(PagedAccessor<T> pagedAccessor, int page);
     
     /**
      * Put an object at a given page.  The supplied object SHOULD NEVER be mutated 
@@ -113,7 +113,7 @@ public interface Paged {
      * @param page
      * @param value
      */
-    <T> void put(EncoderDecoder<T> encoderDecoder, int page, T value);
+    <T> void put(PagedAccessor<T> pagedAccessor, int page, T value);
     
     /**
      * Frees any pages associated with the value stored at the given page if any.  Does not free
@@ -122,6 +122,6 @@ public interface Paged {
      * @param page
      * @return
      */
-    <T> void clear(EncoderDecoder<T> encoderDecoder, int page);
+    <T> void clear(PagedAccessor<T> pagedAccessor, int page);
 
 }

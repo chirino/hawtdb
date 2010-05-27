@@ -32,7 +32,7 @@ import java.util.List;
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-abstract public class AbstractStreamEncoderDecoder<T>  implements EncoderDecoder<T> {
+abstract public class AbstractStreamPagedAccessor<T>  implements PagedAccessor<T> {
 
     public List<Integer> store(Paged paged, int page, T data) {
         // The node will be stored in an extent. This allows us to easily

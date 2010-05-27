@@ -158,7 +158,9 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     public void destroy() {
         buckets.destroy();
         buckets = null;
+        paged.free(page);
     }
+
     public int getPage() {
         return page;
     }
@@ -200,17 +202,17 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     
     private void storeBuckets() {
         if( deferredEncoding ) {
-            paged.put(BUCKET_ENCODER_DECODER, page, buckets);
+            paged.put(BUCKET_PAGED_ACCESSOR, page, buckets);
         } else {
-            BUCKET_ENCODER_DECODER.store(paged, page, buckets);
+            BUCKET_PAGED_ACCESSOR.store(paged, page, buckets);
         }
     }
     
     private void loadBuckets() {
         if( deferredEncoding ) {
-            buckets = paged.get(BUCKET_ENCODER_DECODER, page);
+            buckets = paged.get(BUCKET_PAGED_ACCESSOR, page);
         } else {
-            buckets = BUCKET_ENCODER_DECODER.load(paged, page);
+            buckets = BUCKET_PAGED_ACCESSOR.load(paged, page);
         }
     }
     
@@ -288,7 +290,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     public static final Buffer MAGIC = new Buffer(new byte[] {'h', 'a', 's', 'h'});
     public static final int HEADER_SIZE = MAGIC.length+ 12; // bucketsPage, capacity, active
 
-    private final EncoderDecoder<Buckets<Key, Value>> BUCKET_ENCODER_DECODER = new EncoderDecoder<Buckets<Key, Value>>() {
+    private final PagedAccessor<Buckets<Key, Value>> BUCKET_PAGED_ACCESSOR = new PagedAccessor<Buckets<Key, Value>>() {
 
         public List<Integer> store(Paged paged, int page, Buckets<Key, Value> buckets) {
             DataByteArrayOutputStream os = new DataByteArrayOutputStream(HEADER_SIZE);

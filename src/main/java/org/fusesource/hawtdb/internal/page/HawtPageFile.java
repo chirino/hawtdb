@@ -18,7 +18,7 @@ package org.fusesource.hawtdb.internal.page;
 
 import java.nio.ByteBuffer;
 
-import org.fusesource.hawtdb.api.EncoderDecoder;
+import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtdb.api.PageFile;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
 import org.fusesource.hawtbuf.Buffer;
@@ -92,16 +92,16 @@ public class HawtPageFile implements PageFile {
         file.sync();
     }
 
-    public <T> T get(EncoderDecoder<T> encoderDecoder, int page) {
-        return encoderDecoder.load(this, page);
+    public <T> T get(PagedAccessor<T> pagedAccessor, int page) {
+        return pagedAccessor.load(this, page);
     }
 
-    public <T> void put(EncoderDecoder<T> encoderDecoder, int page, T value) {
-        encoderDecoder.store(this, page, value);
+    public <T> void put(PagedAccessor<T> pagedAccessor, int page, T value) {
+        pagedAccessor.store(this, page, value);
     }
 
-    public <T> void clear(EncoderDecoder<T> encoderDecoder, int page) {
-        encoderDecoder.remove(this, page);
+    public <T> void clear(PagedAccessor<T> pagedAccessor, int page) {
+        pagedAccessor.remove(this, page);
     }
     
     ///////////////////////////////////////////////////////////////////

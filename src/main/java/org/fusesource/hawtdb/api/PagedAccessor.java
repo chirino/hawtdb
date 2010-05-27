@@ -25,7 +25,7 @@ import java.util.List;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  * @param <T>
  */
-public interface EncoderDecoder<T> {
+public interface PagedAccessor<T> {
     
     /**
      * Store a value at the specified page.

@@ -18,7 +18,7 @@ package org.fusesource.hawtdb.internal.page;
 
 import java.util.Map;
 
-import org.fusesource.hawtdb.api.EncoderDecoder;
+import org.fusesource.hawtdb.api.PagedAccessor;
 
 /**
  * 
@@ -98,7 +98,7 @@ final class SnapshotHead extends BatchEntry {
     }
     
     
-    public <T> T get(EncoderDecoder<T> marshaller, int page) {
+    public <T> T get(PagedAccessor<T> marshaller, int page) {
         Batch batch = parent;
         BatchEntry entry = this;
         

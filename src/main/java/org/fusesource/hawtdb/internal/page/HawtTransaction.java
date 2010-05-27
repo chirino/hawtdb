@@ -19,12 +19,8 @@ package org.fusesource.hawtdb.internal.page;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.fusesource.hawtdb.api.Allocator;
-import org.fusesource.hawtdb.api.EncoderDecoder;
-import org.fusesource.hawtdb.api.IOPagingException;
-import org.fusesource.hawtdb.api.OutOfSpaceException;
-import org.fusesource.hawtdb.api.PagingException;
-import org.fusesource.hawtdb.api.Transaction;
+import org.fusesource.hawtdb.api.*;
+import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtdb.internal.util.Ranges;
 import org.fusesource.hawtdb.util.StringSupport;
 import org.fusesource.hawtbuf.Buffer;
@@ -99,7 +95,7 @@ final class HawtTransaction implements Transaction {
 
     };
 
-    public <T> T get(EncoderDecoder<T> marshaller, int page) {
+    public <T> T get(PagedAccessor<T> marshaller, int page) {
         // Perhaps the page was updated in the current transaction...
         Update update = updates == null ? null : updates.get(page);
         if( update != null ) {
@@ -119,7 +115,7 @@ final class HawtTransaction implements Transaction {
         return rc;
     }
 
-    public <T> void put(EncoderDecoder<T> marshaller, int page, T value) {
+    public <T> void put(PagedAccessor<T> marshaller, int page, T value) {
         ConcurrentHashMap<Integer, Update> updates = getUpdates();
         Update update = updates.get(page);
         if (update == null) {
@@ -141,7 +137,7 @@ final class HawtTransaction implements Transaction {
         }
     }
 
-    public <T> void clear(EncoderDecoder<T> marshaller, int page) {
+    public <T> void clear(PagedAccessor<T> marshaller, int page) {
         ConcurrentHashMap<Integer, Update> updates = getUpdates();
         Update update = updates.get(page);
         

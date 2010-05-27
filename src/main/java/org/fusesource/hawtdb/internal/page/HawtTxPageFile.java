@@ -31,13 +31,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.zip.CRC32;
 
-import org.fusesource.hawtdb.api.Allocator;
-import org.fusesource.hawtdb.api.EncoderDecoder;
-import org.fusesource.hawtdb.api.IOPagingException;
-import org.fusesource.hawtdb.api.PagingException;
-import org.fusesource.hawtdb.api.Transaction;
-import org.fusesource.hawtdb.api.TxPageFile;
-import org.fusesource.hawtdb.api.TxPageFileFactory;
+import org.fusesource.hawtdb.api.*;
+import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtdb.api.Paged.SliceType;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
 import org.fusesource.hawtdb.internal.util.Ranges;
@@ -772,7 +767,7 @@ public final class HawtTxPageFile implements TxPageFile {
     final class ReadCache {
         private final Map<Integer, Object> map = Collections.synchronizedMap(new LRUCache<Integer, Object>(1024));
 
-        @SuppressWarnings("unchecked") <T> T cacheLoad(EncoderDecoder<T> marshaller, int pageId) {
+        @SuppressWarnings("unchecked") <T> T cacheLoad(PagedAccessor<T> marshaller, int pageId) {
             T rc = (T) map.get(pageId);
             if( rc ==null ) {
                 rc = marshaller.load(pageFile, pageId);

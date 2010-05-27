@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.internal.journal;
 
 import org.fusesource.hawtbuf.codec.Codec;
+import org.fusesource.hawtbuf.codec.VarIntegerCodec;
 import org.fusesource.hawtdb.internal.journal.Location;
 
 import java.io.DataInput;
@@ -34,18 +35,18 @@ public class LocationCodec implements Codec<Location> {
     public static final LocationCodec INSTANCE = new LocationCodec();
 
     public void encode(Location object, DataOutput dataOut) throws IOException {
-        dataOut.writeInt(object.getDataFileId());
-        dataOut.writeInt(object.getOffset());
+        VarIntegerCodec.INSTANCE.encode(object.getDataFileId(), dataOut);
+        VarIntegerCodec.INSTANCE.encode(object.getOffset(), dataOut);
     }
 
     public Location decode(DataInput dataIn) throws IOException {
-        int fileId = dataIn.readInt();
-        int offset = dataIn.readInt();
+        int fileId = VarIntegerCodec.INSTANCE.decode(dataIn);
+        int offset = VarIntegerCodec.INSTANCE.decode(dataIn);
         return new Location(fileId, offset);
     }
 
     public int getFixedSize() {
-        return 8;
+        return -1;
     }
 
     public Location deepCopy(Location source) {
@@ -57,6 +58,7 @@ public class LocationCodec implements Codec<Location> {
     }
 
     public int estimatedSize(Location object) {
-        return 8;
+        return VarIntegerCodec.INSTANCE.estimatedSize(object.getDataFileId()) +
+               VarIntegerCodec.INSTANCE.estimatedSize(object.getOffset());
     }
 }

@@ -27,11 +27,11 @@ import java.io.IOException;
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class MarshallerEncoderDecoder<T> extends AbstractStreamEncoderDecoder<T> {
+public class CodecPagedAccessor<T> extends AbstractStreamPagedAccessor<T> {
 
     private final Codec<T> codec;
 
-    public MarshallerEncoderDecoder(Codec<T> codec) {
+    public CodecPagedAccessor(Codec<T> codec) {
         this.codec = codec;
     }
 

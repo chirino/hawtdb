@@ -19,7 +19,7 @@ package org.fusesource.hawtdb.internal.page;
 import java.io.ObjectStreamException;
 import java.util.List;
 
-import org.fusesource.hawtdb.api.EncoderDecoder;
+import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtdb.api.Paged;
 
 /**
@@ -34,7 +34,7 @@ import org.fusesource.hawtdb.api.Paged;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 class DeferredUpdate extends Update {
-    EncoderDecoder<?> marshaller;
+    PagedAccessor<?> marshaller;
     Object value;
 
     public DeferredUpdate(Update update) {
@@ -56,14 +56,14 @@ class DeferredUpdate extends Update {
         return this;
     }
     
-    public DeferredUpdate store(Object value, EncoderDecoder<?> marshaller) {
+    public DeferredUpdate store(Object value, PagedAccessor<?> marshaller) {
         this.value = value;
         this.marshaller = marshaller;
         flags = (byte) ((flags & ~PAGE_CLEAR) | PAGE_STORE);
         return this;
     }
 
-    public DeferredUpdate clear(EncoderDecoder<?> marshaller) {
+    public DeferredUpdate clear(PagedAccessor<?> marshaller) {
         this.marshaller= marshaller;
         this.value=null;
         flags = (byte) ((flags & ~PAGE_STORE) | PAGE_CLEAR);
@@ -77,7 +77,7 @@ class DeferredUpdate extends Update {
     
     @SuppressWarnings("unchecked")
     public List<Integer> store(Paged paged) {
-        return ((EncoderDecoder)marshaller).store(paged, page, value);
+        return ((PagedAccessor)marshaller).store(paged, page, value);
     }
 
     public Object writeReplace() throws ObjectStreamException {

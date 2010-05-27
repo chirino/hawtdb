@@ -30,16 +30,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.fusesource.hawtdb.api.EncoderDecoder;
-import org.fusesource.hawtdb.api.TxPageFile;
-import org.fusesource.hawtdb.api.TxPageFileFactory;
-import org.fusesource.hawtdb.api.IOPagingException;
-import org.fusesource.hawtdb.api.OptimisticUpdateException;
-import org.fusesource.hawtdb.api.Paged;
-import org.fusesource.hawtdb.api.Transaction;
-import org.fusesource.hawtdb.internal.page.ExtentInputStream;
-import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
-import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
+import org.fusesource.hawtdb.api.*;
+import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtbuf.Buffer;
 import org.junit.After;
 import org.junit.Before;
@@ -109,7 +101,7 @@ public class ConcurrentPageFileTest {
         }
     }
 
-    private final class StringEncoderDecoder implements EncoderDecoder<String> {
+    private final class StringPagedAccessor implements PagedAccessor<String> {
         public String load(Paged paged, int page) {
             return ConcurrentPageFileTest.this.load(paged, page);
         }
@@ -127,7 +119,7 @@ public class ConcurrentPageFileTest {
 
         // Setup some pages that will be getting updated.
         Transaction tx = pf.tx();
-        StringEncoderDecoder ENCODER = new StringEncoderDecoder();
+        StringPagedAccessor ENCODER = new StringPagedAccessor();
         tx.put(ENCODER, tx.allocator().alloc(1), "Hello");
         tx.put(ENCODER, tx.allocator().alloc(1), "World");
         tx.commit();
@@ -146,7 +138,7 @@ public class ConcurrentPageFileTest {
 
         // Setup some pages that will be getting updated.
         Transaction tx1 = pf.tx();
-        StringEncoderDecoder ENCODER = new StringEncoderDecoder();
+        StringPagedAccessor ENCODER = new StringPagedAccessor();
         tx1.put(ENCODER, tx1.allocator().alloc(1), "Hello");
         tx1.put(ENCODER, tx1.allocator().alloc(1), "World");
         tx1.commit();

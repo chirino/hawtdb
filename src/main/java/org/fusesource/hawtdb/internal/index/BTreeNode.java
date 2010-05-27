@@ -216,10 +216,10 @@ public final class BTreeNode<Key, Value> {
         return new Data<Key, Value>(keys, children, values, next);
     }
     
-    static public class DataEncoderDecoder<Key, Value> extends AbstractStreamEncoderDecoder<Data<Key, Value>> {
+    static public class DataPagedAccessor<Key, Value> extends AbstractStreamPagedAccessor<Data<Key, Value>> {
         private final BTreeIndex<Key, Value> index;
 
-        public DataEncoderDecoder(BTreeIndex<Key, Value> index) {
+        public DataPagedAccessor(BTreeIndex<Key, Value> index) {
             this.index = index;
         }
 

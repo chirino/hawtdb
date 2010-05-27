@@ -40,7 +40,7 @@ import org.fusesource.hawtbuf.DataByteArrayOutputStream;
  */
 public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
 
-    private final BTreeNode.DataEncoderDecoder<Key, Value> DATA_ENCODER_DECODER = new BTreeNode.DataEncoderDecoder<Key, Value>(this);
+    private final BTreeNode.DataPagedAccessor<Key, Value> DATA_ENCODER_DECODER = new BTreeNode.DataPagedAccessor<Key, Value>(this);
 
     private final Paged paged;
     private final int page;
@@ -275,7 +275,8 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
     }
 
     public void destroy() {
-        // TODO Auto-generated method stub
+        clear();
+        paged.free(page);
     }
 
 }
