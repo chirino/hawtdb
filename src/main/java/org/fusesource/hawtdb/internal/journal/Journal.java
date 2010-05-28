@@ -407,36 +407,19 @@ public class Journal {
                     cur.setOffset(0);
                 } else {
                     // Set to the next offset..
-                    if (location.getSize() == -1) {
-                        cur = new Location(location);
-                    } else {
-                        cur = new Location(location);
-                        cur.setOffset(location.getOffset() + location.getSize());
+                    if ( location.getSize() == -1 && !readLocationDetails(location) ) {
+                        return null;
                     }
+                    cur = new Location(location);
+                    cur.setOffset(location.getOffset() + location.getSize());
                 }
             } else {
                 cur.setOffset(cur.getOffset() + cur.getSize());
             }
 
-            DataFile dataFile = getDataFile(cur);
 
-            // Did it go into the next file??
-            if (dataFile.getLength() <= cur.getOffset()) {
-                dataFile = getNextDataFile(dataFile);
-                if (dataFile == null) {
-                    return null;
-                } else {
-                    cur.setDataFileId(dataFile.getDataFileId().intValue());
-                    cur.setOffset(0);
-                }
-            }
-
-            // Load in location size and type.
-            DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
-            try {
-				reader.readLocationDetails(cur);
-            } finally {
-                accessorPool.closeDataFileAccessor(reader);
+            if( !readLocationDetails(cur) ) {
+                return null;
             }
 
             if (cur.getType() == 0) {
@@ -446,6 +429,30 @@ public class Journal {
                 return cur;
             }
         }
+    }
+
+    public boolean readLocationDetails(Location cur) throws IOException {
+        DataFile dataFile = getDataFile(cur);
+
+        // Did it go into the next file??
+        if (dataFile.getLength() <= cur.getOffset()) {
+            dataFile = getNextDataFile(dataFile);
+            if (dataFile == null) {
+                return false;
+            } else {
+                cur.setDataFileId(dataFile.getDataFileId().intValue());
+                cur.setOffset(0);
+            }
+        }
+
+        // Load in location size and type.
+        DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
+        try {
+            reader.readLocationDetails(cur);
+        } finally {
+            accessorPool.closeDataFileAccessor(reader);
+        }
+        return true;
     }
 
     public synchronized Location getNextLocation(File file, Location lastLocation, boolean thisFileOnly) throws IllegalStateException, IOException {
