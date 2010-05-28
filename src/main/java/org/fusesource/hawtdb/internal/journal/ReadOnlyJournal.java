@@ -125,7 +125,7 @@ public class ReadOnlyJournal extends Journal {
     }
     
     @Override
-    public synchronized boolean delete() throws IOException {
+    public synchronized boolean clear() throws IOException {
         throw new RuntimeException("Cannot delete a ReadOnlyAsyncDataManager");
     }    
 }

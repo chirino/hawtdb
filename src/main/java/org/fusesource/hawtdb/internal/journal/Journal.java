@@ -300,7 +300,7 @@ public class Journal {
         }
     }
 
-    public synchronized boolean delete() throws IOException {
+    public synchronized boolean clear() throws IOException {
 
         // Close all open file handles...
         appender.close();
