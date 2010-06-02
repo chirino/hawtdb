@@ -241,7 +241,6 @@ public final class HawtTxPageFile implements TxPageFile {
                     Thread rc = new Thread(r);
                     rc.setName("HawtDB Worker");
                     rc.setDaemon(true);
-                    rc.start();
                     return rc;
                 }
             });
