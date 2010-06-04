@@ -99,6 +99,9 @@ final class HawtTransaction implements Transaction {
         // Perhaps the page was updated in the current transaction...
         Update update = updates == null ? null : updates.get(page);
         if( update != null ) {
+            if( update.wasFreed() ) {
+                throw new PagingException("That page was freed.");
+            }
             DeferredUpdate deferred = update.deferredUpdate();
             if( deferred != null ) {
                 return deferred.<T>value();

@@ -488,11 +488,39 @@ public final class HawtTxPageFile implements TxPageFile {
     
     // /////////////////////////////////////////////////////////////////
     //
-    // Methods which transition bathes through their life cycle states;
+    // Methods which transition bathes through their life cycle states:
+    // open -> storing -> stored -> performing -> performed -> released
     //
-    //    open -> storing -> stored -> performed -> released
+    //   state: open - you can add additional commits to the batch
     //
-    // The HOUSE_KEEPING_MUTEX must be acquired before being called. 
+    //   on: batch size limit reached
+    //   action: write the batch to disk
+    //           update storing_batch_page
+    //
+    //   state: storing - batch was written to disk, but not synced.. batch may be lost on failure.
+    //
+    //      on: disk sync
+    //      action: update stored_batch_page
+    //
+    //   state: stored - we know know the batch can be recovered.  Updates will not be lost once we hit this state.
+    //
+    //     on: original pages drained of open snapshots
+    //     action: copy shadow pages to original pages
+    //
+    //   state: performing - original pages are being updated.  Updates might be partially applied.
+    //
+    //      on: disk sync
+    //
+    //   state performed: original pages no updated.
+    //
+    //      action: the batch becomes the base revision, new snapshot can refer to the original page locations.
+    //
+    //      on: batch drained of open snapshots
+    //
+    //   state: released - The batch is no longer being used.
+    //
+    //      action: free the batch shadow pages
+    //
     //
     // /////////////////////////////////////////////////////////////////
     
@@ -618,20 +646,21 @@ public final class HawtTxPageFile implements TxPageFile {
         }
         
         while( storedBatches!=storingBatches ) {
-            
+
             // Performing the batch actually applies the updates to the original page locations.
             for (Commit commit : storedBatches) {
                 for (Entry<Integer, Update> entry : commit.updates.entrySet()) {
                     int page = entry.getKey();
                     Update update = entry.getValue();
-                    
+
+                    // is it a shadow update?
                     if( page != update.page ) {
                         
                         if( storedBatches.recovered ) {
-                            // If we are recovering, the allocator MIGHT not have this 
+                            // If we are recovering, the allocator MIGHT not have the shadow
                             // page as being allocated.  This makes sure it's allocated so that
                             // new transaction to get this page and overwrite it in error.
-                            allocator.unfree(page, 1);
+                            allocator.unfree(update.page, 1);
                         }
                         
                         // Perform the update by copying the updated page the original
