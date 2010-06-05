@@ -18,6 +18,8 @@ package org.fusesource.hawtdb.internal.page;
 
 import java.util.Iterator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.fusesource.hawtdb.api.Allocator;
 import org.fusesource.hawtdb.api.OutOfSpaceException;
 import org.fusesource.hawtdb.internal.util.Ranges;
@@ -30,6 +32,7 @@ import org.fusesource.hawtdb.internal.util.Ranges.Range;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class SimpleAllocator implements Allocator {
+    private static final Log LOG = LogFactory.getLog(SimpleAllocator.class);
 
     private final Ranges freeRanges = new Ranges();
     private int limit;
@@ -47,6 +50,7 @@ public class SimpleAllocator implements Allocator {
             Range r = (Range) i.next();
             if( r.size() >= size ) {
                 int rc = r.start;
+//                LOG.trace("ALLOC: "+rc+":"+size);
                 freeRanges.remove(rc, size);
                 return rc;
             }
@@ -60,6 +64,7 @@ public class SimpleAllocator implements Allocator {
      */
     synchronized public void free(int pageId, int count) {
         freeRanges.add(pageId, count);
+//        LOG.trace("FREE: "+pageId+":"+count);
     }
 
     /**
@@ -67,14 +72,17 @@ public class SimpleAllocator implements Allocator {
      */
     synchronized public void unfree(int pageId, int count) {
         freeRanges.remove(pageId, count);
+//        LOG.trace("UNFREE: "+pageId+":"+count);
     }
 
     synchronized public void clear() throws UnsupportedOperationException {
+//        LOG.trace("CLEAR");
         freeRanges.clear();
         freeRanges.add(0, limit);
     }
 
     synchronized public void copy(Ranges freePages) throws UnsupportedOperationException {
+//        LOG.trace("COPY: "+freePages);
         freeRanges.copy(freePages);
     }
     

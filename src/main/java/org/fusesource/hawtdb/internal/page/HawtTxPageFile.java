@@ -31,6 +31,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.zip.CRC32;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.fusesource.hawtdb.api.*;
 import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtdb.api.Paged.SliceType;
@@ -62,6 +64,7 @@ import org.fusesource.hawtdb.util.list.LinkedNodeList;
  */
 public final class HawtTxPageFile implements TxPageFile {
 
+    private static final Log LOG = LogFactory.getLog(HawtTxPageFile.class);
     public static final int FILE_HEADER_SIZE = 1024 * 4;
     public static final  byte[] MAGIC = magic(); 
 
@@ -416,39 +419,51 @@ public final class HawtTxPageFile implements TxPageFile {
             if( !Arrays.equals(MAGIC, header.magic) ) {
                 throw new PagingException("The file header is not of the expected type.");
             }
-            
-            long baseRevision = header.base_revision;
-    
+
+            LOG.debug("recovery started.  header: "+header);
+
             // Initialize the free page list.
-            int pageId = header.free_list_page;
-            if( pageId >= 0 ) {
-                storedFreeList = loadObject(pageId);
+            if( header.free_list_page >= 0 ) {
+                storedFreeList = loadObject(header.free_list_page);
                 allocator.copy(storedFreeList);
-                Extent.unfree(pageFile, pageId);
+                Extent.unfree(pageFile, header.free_list_page);
             } else {
                 allocator.clear(); 
                 storedFreeList.add(0, allocator.getLimit());
             }
-            
-            boolean consistencyCheckNeeded=true;
-            int last_synced_batch = header.stored_batch_page;
-            pageId = header.storing_batch_page;
-            if( pageId<0 ) {
-                pageId = last_synced_batch;
-                consistencyCheckNeeded = false;
+
+            int pageId = header.stored_batch_page;
+            if( header.storing_batch_page >= 0 ) {
+                pageId = header.storing_batch_page;
             }
+            boolean consistencyCheckNeeded = header.storing_batch_page != header.stored_batch_page;
+
+
             while( true ) {
                 if( pageId < 0 ) {
                     break;
                 }
 
+                LOG.trace("loading batch at: "+pageId);
+                Batch batch = null;
                 if( consistencyCheckNeeded ) {
-                    // TODO: when consistencyCheckNeeded==true, then we need to check the
-                    // Consistency of the batch, as it may have been partially written to disk.
+                    // write could be corrupted.. lets be careful
+                    try {
+                        batch = loadObject(pageId);
+                    } catch(Exception e) {
+                        // :( looks like it was not fully synced to disk. Jump
+                        // to the las known good location:
+                        pageId = header.stored_batch_page;
+                        consistencyCheckNeeded = false;
+                        continue;
+                    }
+                } else {
+                    // it should load fine..
+                    batch = loadObject(pageId);
                 }
 
+                LOG.trace("loaded batch: "+batch);
 
-                Batch batch = loadObject(pageId); 
                 batch.page = pageId;
                 batch.recovered = true;
                 Extent.unfree(pageFile, pageId);
@@ -457,13 +472,13 @@ public final class HawtTxPageFile implements TxPageFile {
                     openBatch.head = batch.head;
                 }
     
-                if( baseRevision < batch.head ) {
+                if( header.base_revision+1 < batch.head ) {
                     // add first since we are loading batch objects oldest to youngest
                     // but want to put them in the list youngest to oldest.
                     batches.addFirst(batch);
                     performedBatches = storedBatches = batch;
                     pageId=batch.previous;
-                    if( pageId==last_synced_batch ) {
+                    if( pageId== header.stored_batch_page) {
                         consistencyCheckNeeded = false;
                     }
                 } else {
@@ -473,6 +488,7 @@ public final class HawtTxPageFile implements TxPageFile {
             
             // Apply all the batches..
             performBatches();
+            syncBatches();
         }        
     }
 
@@ -550,6 +566,8 @@ public final class HawtTxPageFile implements TxPageFile {
         
         // Store the batch record.
         lastBatchPage = batch.page = storeObject(batch);
+        LOG.trace("stored batch: "+batch);
+
 
         // Update the header to know about the new batch page.
         header.storing_batch_page = batch.page;
@@ -646,6 +664,8 @@ public final class HawtTxPageFile implements TxPageFile {
         }
         
         while( storedBatches!=storingBatches ) {
+
+            LOG.trace("Performing batch: "+storedBatches);
 
             // Performing the batch actually applies the updates to the original page locations.
             for (Commit commit : storedBatches) {
@@ -785,7 +805,8 @@ public final class HawtTxPageFile implements TxPageFile {
     }
     
     private void storeHeader() {
-         file.write(0, header.encode());
+        LOG.trace("storing file header: "+header);
+        file.write(0, header.encode());
     }    
     
     // /////////////////////////////////////////////////////////////////
