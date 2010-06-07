@@ -21,9 +21,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -94,16 +92,20 @@ public final class HawtTxPageFile implements TxPageFile {
         public int page_size;
         /** The page location of the free page list */
         public int free_list_page;
-        /** points at the latest batch page which is guaranteed to be fully stored */
-        public int stored_batch_page;
-        /** The page location of the latest batch page. Not guaranteed to be fully stored */ 
-        public int storing_batch_page;
-                
+
+        /** Where it is safe to resume recovery... Will be
+         *  -1 if no recovery is needed. */
+        public int pessimistic_recovery_page;
+
+        /** We try to recover from this point.. but it may fail since it's
+         *  writes have not been synced to disk. */
+        public int optimistic_recovery_page;
+
         public String toString() { 
             return "{ base_revision: "+this.base_revision+
             ", page_size: "+page_size+", free_list_page: "+free_list_page+
-            ", stored_batch_page: "+stored_batch_page+
-            ", storing_batch_page: "+storing_batch_page+ 
+            ", pessimistic_recovery_page: "+ pessimistic_recovery_page +
+            ", optimistic_recovery_page: "+ optimistic_recovery_page +
             " }";
         }
         
@@ -116,8 +118,8 @@ public final class HawtTxPageFile implements TxPageFile {
                 os.writeLong(base_revision);
                 os.writeInt(page_size);
                 os.writeInt(free_list_page);
-                os.writeInt(stored_batch_page);
-                os.writeInt(storing_batch_page);
+                os.writeInt(pessimistic_recovery_page);
+                os.writeInt(optimistic_recovery_page);
 
                 int length = os.position();
                 byte[] data = os.getData();
@@ -163,8 +165,8 @@ public final class HawtTxPageFile implements TxPageFile {
             base_revision = is.readLong();
             page_size = is.readInt();
             free_list_page = is.readInt();
-            stored_batch_page = is.readInt();
-            storing_batch_page = is.readInt();
+            pessimistic_recovery_page = is.readInt();
+            optimistic_recovery_page = is.readInt();
             int length = is.getPos();
             return length;
         }
@@ -394,8 +396,8 @@ public final class HawtTxPageFile implements TxPageFile {
             header.base_revision = -1;
             header.free_list_page = -1;
             header.page_size = pageFile.getPageSize();
-            header.stored_batch_page = -1;
-            header.storing_batch_page = -1;
+            header.pessimistic_recovery_page = -1;
+            header.optimistic_recovery_page = -1;
             storeHeader();
         }
     }    
@@ -432,29 +434,33 @@ public final class HawtTxPageFile implements TxPageFile {
                 storedFreeList.add(0, allocator.getLimit());
             }
 
-            int pageId = header.stored_batch_page;
-            if( header.storing_batch_page >= 0 ) {
-                pageId = header.storing_batch_page;
+            int pageId = header.pessimistic_recovery_page;
+            if( header.optimistic_recovery_page >= 0 ) {
+                pageId = header.optimistic_recovery_page;
             }
-            boolean consistencyCheckNeeded = header.storing_batch_page != header.stored_batch_page;
 
+            LinkedList<Batch> loaded = new LinkedList<Batch>();
 
-            while( true ) {
-                if( pageId < 0 ) {
-                    break;
-                }
+            boolean consistencyCheckNeeded = true;
+            while( pageId >= 0  ) {
 
                 LOG.trace("loading batch at: "+pageId);
                 Batch batch = null;
+
+                if( pageId == header.pessimistic_recovery_page) {
+                    consistencyCheckNeeded = false;
+                }
+
                 if( consistencyCheckNeeded ) {
                     // write could be corrupted.. lets be careful
                     try {
                         batch = loadObject(pageId);
                     } catch(Exception e) {
-                        // :( looks like it was not fully synced to disk. Jump
-                        // to the las known good location:
-                        pageId = header.stored_batch_page;
-                        consistencyCheckNeeded = false;
+                        LOG.trace("incomplete batch at: "+pageId);
+                        // clear out any previously loaded batchs.. and
+                        // resume from the pessimistic location.
+                        loaded.clear();
+                        pageId = header.pessimistic_recovery_page;
                         continue;
                     }
                 } else {
@@ -462,34 +468,45 @@ public final class HawtTxPageFile implements TxPageFile {
                     batch = loadObject(pageId);
                 }
 
-                LOG.trace("loaded batch: "+batch);
-
                 batch.page = pageId;
                 batch.recovered = true;
-                Extent.unfree(pageFile, pageId);
-                
-                if( openBatch.head == -1 ) {
-                    openBatch.head = batch.head;
+                loaded.add(batch);
+
+                LOG.trace("loaded batch: "+batch);
+
+                // is this the last batch we need to load?
+                if( header.base_revision+1 == batch.base ) {
+                    break;
                 }
-    
-                if( header.base_revision+1 < batch.head ) {
+
+                pageId=batch.previous;
+            }
+
+            if( loaded.isEmpty() ) {
+                LOG.trace("no batches need to be recovered.");
+            } else {
+
+                // link up the batch objects...
+                for (Batch batch : loaded) {
+
+                    // makes sure the batch pages are not in the free list.
+                    Extent.unfree(pageFile, batch.page);
+
+                    if( openBatch.head == -1 ) {
+                        openBatch.head = batch.head;
+                    }
+
                     // add first since we are loading batch objects oldest to youngest
                     // but want to put them in the list youngest to oldest.
                     batches.addFirst(batch);
                     performedBatches = storedBatches = batch;
-                    pageId=batch.previous;
-                    if( pageId== header.stored_batch_page) {
-                        consistencyCheckNeeded = false;
-                    }
-                } else {
-                    break;
                 }
+
+                // Perform the updates..
+                performBatches();
+                syncBatches();
             }
-            
-            // Apply all the batches..
-            performBatches();
-            syncBatches();
-        }        
+        }
     }
 
     /* (non-Javadoc)
@@ -511,12 +528,12 @@ public final class HawtTxPageFile implements TxPageFile {
     //
     //   on: batch size limit reached
     //   action: write the batch to disk
-    //           update storing_batch_page
+    //           update optimistic_recovery_page
     //
     //   state: storing - batch was written to disk, but not synced.. batch may be lost on failure.
     //
     //      on: disk sync
-    //      action: update stored_batch_page
+    //      action: update pessimistic_recovery_page
     //
     //   state: stored - we know know the batch can be recovered.  Updates will not be lost once we hit this state.
     //
@@ -570,7 +587,7 @@ public final class HawtTxPageFile implements TxPageFile {
 
 
         // Update the header to know about the new batch page.
-        header.storing_batch_page = batch.page;
+        header.optimistic_recovery_page = batch.page;
         storeHeader();
     }
     
@@ -602,7 +619,10 @@ public final class HawtTxPageFile implements TxPageFile {
             // The last stored is actually synced now..
             Batch lastStoredBatch = openBatch.getPrevious();
             // Let the header know about it..
-            header.stored_batch_page = lastStoredBatch.page;
+            header.pessimistic_recovery_page = lastStoredBatch.page;
+            if( header.optimistic_recovery_page == header.pessimistic_recovery_page ) {
+                header.optimistic_recovery_page = -1;
+            }
             
             // We synchronized /w the transactions so that they see the state change.
             synchronized (TRANSACTION_MUTEX) {
@@ -618,6 +638,10 @@ public final class HawtTxPageFile implements TxPageFile {
                 break;
             }
             
+            if( performedBatches.page == header.pessimistic_recovery_page ) {
+                header.pessimistic_recovery_page = -1;
+            }
+
             // Free the update pages associated with the batch.
             performedBatches.release(allocator);
             
