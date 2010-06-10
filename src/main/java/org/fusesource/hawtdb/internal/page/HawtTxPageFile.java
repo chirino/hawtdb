@@ -731,6 +731,17 @@ public final class HawtTxPageFile implements TxPageFile {
                     } else if( update.wasFreed() ) {
                         storedFreeList.add(page, 1);
                     }
+
+                    // update the read cache..
+                    DeferredUpdate du = update.deferredUpdate();
+                    if( du != null ) {
+                        if( du.wasDeferredClear() ) {
+                            readCache.map.remove(page);
+                        } else if( du.wasDeferredStore() ) {
+                            readCache.map.put(page, du.value);
+                        }
+                    }
+
                 }
             }
             
@@ -838,7 +849,7 @@ public final class HawtTxPageFile implements TxPageFile {
     // /////////////////////////////////////////////////////////////////
 
     final class ReadCache {
-        private final Map<Integer, Object> map = Collections.synchronizedMap(new LRUCache<Integer, Object>(1024));
+        public final Map<Integer, Object> map = Collections.synchronizedMap(new LRUCache<Integer, Object>(1024));
 
         @SuppressWarnings("unchecked") <T> T cacheLoad(PagedAccessor<T> marshaller, int pageId) {
             T rc = (T) map.get(pageId);
