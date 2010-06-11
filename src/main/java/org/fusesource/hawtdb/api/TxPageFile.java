@@ -26,4 +26,15 @@ public interface TxPageFile {
      */
     public abstract void flush();
 
+    /**
+     * If the transaction page file is configured to use a worker thread,
+     * then this method performs a non-blocking flush otherwise this
+     * method blocks until the flush is completed.
+     *
+     * The specified runnable is executed once the flush completes.
+     *
+     * @param onComplete
+     */
+    public void flush(Runnable onComplete);
+
 }

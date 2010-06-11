@@ -69,9 +69,9 @@ final class Snapshot {
                 cur = cur.getNext();
             }
 
-            if( head.snapshots==0 ) {
-                head.unlink();
-            }        
+//            if( head.snapshots==0 ) {
+//                head.unlink();
+//            }
         }
     }
 

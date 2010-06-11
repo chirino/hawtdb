@@ -517,7 +517,22 @@ public final class HawtTxPageFile implements TxPageFile {
             storeBatches(true);
             syncBatches();
         }
-    }   
+    }
+
+    public void flush(final Runnable onComplete) {
+        if( worker!=null ) {
+            worker.execute(new Runnable() {
+                public void run() {
+                    flush();
+                    onComplete.run();
+                }
+            });
+        } else {
+            flush();
+            onComplete.run();
+        }
+
+    }
     
     // /////////////////////////////////////////////////////////////////
     //

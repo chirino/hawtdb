@@ -124,10 +124,10 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
             }
 
             public void remove() {
-                if( last==null ) {
+//                if( last==null ) {
                     throw new IllegalStateException();
-                }
-                last.unlink();
+//                }
+//                last.unlink();
             }
         };
     }
