@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.fusesource.hawtdb.api.Allocator;
 import org.fusesource.hawtdb.api.OptimisticUpdateException;
+import org.fusesource.hawtdb.util.list.LinkedNode;
 
 /**
  * Tracks the updates that were part of a transaction commit.
@@ -35,7 +36,10 @@ import org.fusesource.hawtdb.api.OptimisticUpdateException;
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-final class Commit extends BatchEntry implements Externalizable {
+final class Commit extends LinkedNode<Commit> implements Externalizable {
+
+    /** Tracks open snapshots against this commit */
+    SnapshotTracker snapshotTracker;
 
     /** oldest revision in the commit range. */
     private long base; 
@@ -55,18 +59,11 @@ final class Commit extends BatchEntry implements Externalizable {
     }
     
     
-    @Override
     public long getHeadRevision() {
         return head;
     }
     
-    @Override
-    public Commit isCommit() {
-        return this;
-    }
-
-    
-    public String toString() { 
+    public String toString() {
         int updateSize = updates==null ? 0 : updates.size();
         return "{ base: "+this.base+", head: "+this.head+", updates: "+updateSize+" }";
     }

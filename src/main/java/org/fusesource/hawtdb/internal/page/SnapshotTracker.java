@@ -22,25 +22,23 @@ import org.fusesource.hawtdb.api.PagedAccessor;
 
 /**
  * 
- * A SnapshotHead is BatchEntry and stored in a Batch, in the same
- * list as the Commit objects.  It's main purpose is to separate 
- * commits so that Commits after snapshot do not get merged with commits
- * before the snapshot.
- * 
- * A SnapshotHead allows transactions to get a point in time view of the 
- * page file.
+ * A SnapshotTracker  tracks the open snapshots opened on a given
+ * commit.  This is what allows snapshots/transactions to get a point
+ * in time view of the page file.
  *  
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-final class SnapshotHead extends BatchEntry {
+final class SnapshotTracker {
 
-    final Batch parent;
+    final Batch parentBatch;
+    final Commit parentCommit;
     final long headRevision;
     
-    public SnapshotHead(Batch parent) {
-        this.parent = parent;
-        BatchEntry lastEntry = this.parent.entries.getTail();
-        this.headRevision = (lastEntry == null ? this.parent.head : lastEntry.getHeadRevision())+1;
+    public SnapshotTracker(Batch parentBatch, Commit parentCommit) {
+        this.parentBatch = parentBatch;
+        this.parentCommit = parentCommit;
+        Commit lastEntry = this.parentBatch.commits.getTail();
+        this.headRevision = (lastEntry == null ? this.parentBatch.head : lastEntry.getHeadRevision())+1;
     }
 
     /** The number of times this snapshot has been opened. */
@@ -50,113 +48,109 @@ final class SnapshotHead extends BatchEntry {
         return "{ references: "+this.snapshots+" }";
     }
 
-    @Override
     public long getHeadRevision() {
         return headRevision;
     }
 
-    public SnapshotHead isSnapshotHead() {
-        return this;
-    }
-    
     public int translatePage(int page) {
+        if( parentCommit == null ) {
+            return page;
+        }
+
         int rc = page;
         // Look for the page in the previous commits..
-        Batch batch = parent;
-        BatchEntry entry = this;
+        Batch batch = parentBatch;
+        Commit commit = parentCommit;
         outer: while( true ) {
             if( batch.isPerformed() ) {
                 break;
             }
             
-            BatchEntry first = null;
+            Commit first = null;
             while( true ) {
                 if( first == null ) {
-                    first = entry;
-                } else if( first==entry ) {
+                    first = commit;
+                } else if( first==commit ) {
                     break;
                 }
                 
-                Commit commit = entry.isCommit();
-                if( commit !=null ) {
-                    Update update = commit.updates.get(rc);
-                    if( update!=null ) {
-                        rc = update.page();
-                        break outer;
-                    }
+                Update update = commit.updates.get(rc);
+                if( update!=null ) {
+                    rc = update.page();
+                    break outer;
                 }
-                entry = entry.getPreviousCircular();
+                commit = commit.getPreviousCircular();
             }
             
             batch = batch.getPrevious();
             if( batch==null ) {
                 break;
             }
-            entry = batch.entries.getTail();
+            commit = batch.commits.getTail();
         }
         return rc;
     }
     
     
     public <T> T get(PagedAccessor<T> marshaller, int page) {
-        Batch batch = parent;
-        BatchEntry entry = this;
-        
+        if( parentCommit == null ) {
+            return null;
+        }
+
+        Batch batch = parentBatch;
+        Commit commit = parentCommit;
+
+
         while( true ) {
             if( batch.isPerformed() ) {
                 break;
             }
             
-            BatchEntry tail = null;
+            Commit tail = null;
             while( true ) {
-                if( tail == null ) {
-                    tail = entry;
-                } else if( tail==entry ) {
+                if( tail == null  ) {
+                    tail = commit;
+                } else if( tail==commit ) {
                     break;
                 }
-                
-                Commit commit = entry.isCommit();
-                if( commit !=null ) {
-                    Update update = commit.updates.get(page);
-                    if( update!=null ) {
-                        DeferredUpdate du  = update.deferredUpdate();
-                        if (du!=null) {
-                            return du.<T>value();
-                        }
+
+                Update update = commit.updates.get(page);
+                if( update!=null ) {
+                    DeferredUpdate du  = update.deferredUpdate();
+                    if (du!=null) {
+                        return du.<T>value();
                     }
                 }
-                entry = entry.getPreviousCircular();
+                commit = commit.getPreviousCircular();
             }
-            
+
             batch = batch.getPrevious();
             if( batch==null ) {
                 break;
             }
-            entry = batch.entries.getTail();
+            commit = batch.commits.getTail();
         }
         return null;
     }
-    
+
     public long commitCheck(Map<Integer, Update> pageUpdates) {
-        long rc=parent.head;
-        Batch batch = parent;
-        BatchEntry entry = getNext();
+        long rc= parentBatch.head;
+        Batch batch = parentBatch;
+        Commit commit = parentCommit==null ? batch.commits.getHead() : parentCommit.getNext();
+
         while( true ) {
-            while( entry!=null ) {
-                Commit commit = entry.isCommit();
-                if( commit!=null ) {
-                    rc = commit.commitCheck(pageUpdates);
-                }
-                entry = entry.getNext();
+            while( commit!=null ) {
+                rc = commit.commitCheck(pageUpdates);
+                commit = commit.getNext();
             }
-            
+
             batch = batch.getNext();
             if( batch==null ) {
                 break;
             }
-            entry = batch.entries.getHead();
+            commit = batch.commits.getHead();
         }
         return rc;
     }
-            
+
 }

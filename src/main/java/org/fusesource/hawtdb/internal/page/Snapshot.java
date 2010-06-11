@@ -35,21 +35,21 @@ package org.fusesource.hawtdb.internal.page;
 final class Snapshot {
 
     private final HawtTxPageFile parent;
-    private final SnapshotHead head;
+    private final SnapshotTracker tracker;
     private final Batch base;
     
-    public  Snapshot(HawtTxPageFile hawtPageFile, SnapshotHead head, Batch base) {
+    public  Snapshot(HawtTxPageFile hawtPageFile, SnapshotTracker tracker, Batch base) {
         parent = hawtPageFile;
-        this.head = head;
+        this.tracker = tracker;
         this.base = base;
     }
     
     public Snapshot open() {
-        head.snapshots++;
+        tracker.snapshots++;
         Batch cur = base;
         while( true ) {
             cur.snapshots++;
-            if(cur == head.parent ) {
+            if(cur == tracker.parentBatch) {
                 break;
             }
             cur = cur.getNext();
@@ -59,23 +59,23 @@ final class Snapshot {
     
     public void close() {
         synchronized(parent.TRANSACTION_MUTEX) {
-            head.snapshots--;
+            tracker.snapshots--;
             Batch cur = base;
             while( true ) {
                 cur.snapshots--;
-                if(cur == head.parent ) {
+                if(cur == tracker.parentBatch) {
                     break;
                 }
                 cur = cur.getNext();
             }
 
-//            if( head.snapshots==0 ) {
-//                head.unlink();
-//            }
+            if( tracker.snapshots==0 && tracker.parentCommit!=null ) {
+                tracker.parentCommit.snapshotTracker = null;
+            }
         }
     }
 
-    public SnapshotHead getHead() {
-        return head;
+    public SnapshotTracker getTracker() {
+        return tracker;
     }
 }

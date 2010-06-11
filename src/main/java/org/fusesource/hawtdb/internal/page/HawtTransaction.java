@@ -111,7 +111,7 @@ final class HawtTransaction implements Transaction {
         }
         
         // No?  Then ask the snapshot to load the object.
-        T rc = snapshot().getHead().get(marshaller, page);
+        T rc = snapshot().getTracker().get(marshaller, page);
         if( rc == null ) {
             rc = parent.readCache.cacheLoad(marshaller, page);
         }
@@ -181,7 +181,7 @@ final class HawtTransaction implements Transaction {
             page = update.page();
         } else {
             // in a committed transaction that has not yet been performed.
-            page = snapshot().getHead().translatePage(page);  
+            page = snapshot().getTracker().translatePage(page);
         }
         parent.pageFile.read(page, buffer);
     }
@@ -194,7 +194,7 @@ final class HawtTransaction implements Transaction {
             if (udpate != null) {
                 page = udpate.page();
             } else {
-                page = snapshot().getHead().translatePage(page);
+                page = snapshot().getTracker().translatePage(page);
             }
         } else {
             Update update = getUpdates().get(page);
@@ -210,7 +210,7 @@ final class HawtTransaction implements Transaction {
                 if (type==SliceType.READ_WRITE) {
                     // Oh he's going to read it too?? then copy the original to the 
                     // redo pages..
-                    int originalPage = snapshot().getHead().translatePage(page);
+                    int originalPage = snapshot().getTracker().translatePage(page);
                     ByteBuffer slice = parent.pageFile.slice(SliceType.READ, originalPage, count);
                     try {
                         parent.pageFile.write(update.page, slice);

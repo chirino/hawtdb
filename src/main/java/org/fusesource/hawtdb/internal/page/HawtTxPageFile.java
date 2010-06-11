@@ -319,24 +319,24 @@ public final class HawtTxPageFile implements TxPageFile {
                 
                 // Note: every deferred update has an entry in the pageUpdates, so no need to 
                 // check to see if that map also conflicts.
-                rev = snapshot.getHead().commitCheck(pageUpdates);
+                rev = snapshot.getTracker().commitCheck(pageUpdates);
                 snapshot.close();
             } else {
                 rev = openBatch.head;
             }
             rev++;
 
-            BatchEntry last = openBatch.entries.getTail();
-            if( last!=null ) {
-                commit = last.isCommit();
-            }
-            
-            if( commit!=null ) {
-                // TODO: figure out how to do the merge outside the TRANSACTION_MUTEX
+            commit = openBatch.commits.getTail();
+
+            if( commit!=null && commit.snapshotTracker==null ) {
+                // just merge /w the previous commit if it does not have an open snapshot.
+                // TODO: we are inside the TRANSACTION_MUTEX ... and this seems CPU intensive..
+                // but it's better than always creating more commit entries.. as that slows down
+                // page look up (the have to iterate through all the commits).
                 commit.merge(pageFile.allocator(), rev, pageUpdates);
             } else {
                 commit = new Commit(rev, pageUpdates);
-                openBatch.entries.addLast(commit);
+                openBatch.commits.addLast(commit);
             }
             
             if( openBatch.base == -1 ) {
@@ -782,22 +782,23 @@ public final class HawtTxPageFile implements TxPageFile {
     
     Snapshot openSnapshot() {
         synchronized(TRANSACTION_MUTEX) {
-            SnapshotHead head=null;
 
             // re-use the last entry if it was a snapshot head..
-            BatchEntry entry = openBatch.entries.getTail();
-            if( entry!=null ) {
-                head = entry.isSnapshotHead();
+            Commit commit = openBatch.getHeadCommit();
+            SnapshotTracker tracker = null;
+
+            if( commit !=null ) {
+                if( commit.snapshotTracker == null ) {
+                    // So we can track the new snapshot...
+                    commit.snapshotTracker = new SnapshotTracker(openBatch, commit);
+                }
+                tracker = commit.snapshotTracker;
+            } else {
+                tracker = new SnapshotTracker(openBatch, null);
             }
-            
-            if( head == null ) {
-                // create a new snapshot head entry..
-                head = new SnapshotHead(openBatch);
-                openBatch.entries.addLast(head);
-            }
-            
-            // Open the snapshot off that head position.
-            return new Snapshot(this, head, storedBatches).open();
+
+            // Open the snapshot
+            return new Snapshot(this, tracker, storedBatches).open();
         }
     }
     

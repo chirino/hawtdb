@@ -44,11 +44,11 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     int page=-1;
     /** points to a previous redo batch page */
     public int previous=-1;
-    /** was the redo loaded in the {@link recover} method */
+    /** was this object reloaded from disk? */
     boolean recovered;
     
     /** the commits and snapshots in the redo */ 
-    final LinkedNodeList<BatchEntry> entries = new LinkedNodeList<BatchEntry>();
+    final LinkedNodeList<Commit> commits = new LinkedNodeList<Commit>();
     /** tracks how many snapshots are referencing the redo */
     int snapshots;
     /** the oldest commit in this redo */
@@ -70,7 +70,7 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     }
 
     public String toString() { 
-        return "{ page: "+this.page+", base: "+base+", head: "+head+", snapshots: "+snapshots+", entries: "+entries.size()+" }";
+        return "{ page: "+this.page+", base: "+base+", head: "+head+", snapshots: "+snapshots+", entries: "+ commits.size()+" }";
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -93,7 +93,7 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
         previous = in.readInt();
         ArrayList<Commit> l = (ArrayList<Commit>) in.readObject();
         for (Commit commit : l) {
-            entries.addLast(commit);
+            commits.addLast(commit);
         }
     }        
 
@@ -104,10 +104,21 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
         }
         return rc;
     }
+
+    public Commit getHeadCommit() {
+        Batch b = this;
+        while( b!=null ) {
+            if( !b.commits.isEmpty() ) {
+                return b.commits.getTail();
+            }
+            b = b.getPrevious();
+        }
+        return null;
+    }
     
     public Iterator<Commit> iterator() {
         return new Iterator<Commit>() {
-            Commit next = nextCommit(entries.getHead());
+            Commit next = commits.getHead();
             Commit last;
             
             public boolean hasNext() {
@@ -119,7 +130,7 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
                     throw new NoSuchElementException();
                 }
                 last = next;
-                next = nextCommit(next.getNext());
+                next = next.getNext();
                 return last;
             }
 
@@ -130,18 +141,6 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
 //                last.unlink();
             }
         };
-    }
-
-
-    private Commit nextCommit(BatchEntry entry) {
-        while( entry != null ) {
-            Commit commit = entry.isCommit();
-            if( commit!=null ) {
-                return commit;
-            }
-            entry = entry.getNext();
-        }
-        return null;
     }
 
     public void performDefferedUpdates(Paged pageFile) {            
