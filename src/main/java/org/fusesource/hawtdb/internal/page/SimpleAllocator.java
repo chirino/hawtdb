@@ -43,7 +43,7 @@ public class SimpleAllocator implements Allocator {
     }
 
     /**
-     * @see org.apache.hawtdb.api.hiramchirino.hawtdb.Allocator#allocate(int)
+     * @see Allocator#alloc(int)
      */
     synchronized public int alloc(int size) throws OutOfSpaceException {
         for (Iterator<Range> i = freeRanges.iterator(); i.hasNext();) {
@@ -60,7 +60,7 @@ public class SimpleAllocator implements Allocator {
 
     
     /**
-     * @see org.apache.hawtdb.api.hiramchirino.hawtdb.Allocator#clear(int, int)
+     * @see Allocator#free(int, int)
      */
     synchronized public void free(int pageId, int count) {
         freeRanges.add(pageId, count);
@@ -68,7 +68,7 @@ public class SimpleAllocator implements Allocator {
     }
 
     /**
-     * @see org.apache.hawtdb.api.hiramchirino.hawtdb.Allocator#reallocate(int, int)
+     * @see Allocator#unfree(int, int)
      */
     synchronized public void unfree(int pageId, int count) {
         freeRanges.remove(pageId, count);
