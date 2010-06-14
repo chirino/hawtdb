@@ -34,6 +34,7 @@ public class TxPageFileFactory {
     protected boolean drainOnClose;
     protected boolean sync = true;
     protected boolean useWorkerThread;
+    private int cacheSize = 1024;
 
     public TxPageFileFactory() {
         pageFileFactory.setHeaderSize(HawtTxPageFile.FILE_HEADER_SIZE);
@@ -61,7 +62,7 @@ public class TxPageFileFactory {
     
     /**
      * Closes the previously opened PageFile object.  Subsequent calls to 
-     * {@link PageFileFactory#getTxPageFile()} will return null. 
+     * {@link TxPageFileFactory#getTxPageFile()} will return null.
      */
     public void close() {
         if (txPageFile != null) {
@@ -136,6 +137,12 @@ public class TxPageFileFactory {
     public void setPageSize(short pageSize) {
         pageFileFactory.setPageSize(pageSize);
     }
- 
-    
+
+    public int getCacheSize() {
+        return cacheSize;
+    }
+
+    public void setCacheSize(int cacheSize) {
+        this.cacheSize = cacheSize;
+    }
 }

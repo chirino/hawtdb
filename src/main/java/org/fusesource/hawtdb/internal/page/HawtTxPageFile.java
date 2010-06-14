@@ -197,8 +197,8 @@ public final class HawtTxPageFile implements TxPageFile {
     /** The performed batches.  Page updates have been copied from the redo pages to the original page locations. */
     Batch performedBatches;
     
-    /** Used as read cache */
-    ReadCache readCache = new ReadCache();
+    /** A read cache used to speed up access to frequently used pages */
+    ReadCache readCache;
 
     //
     // Profilers like yourkit just tell which mutex class was locked.. so create a different class for each mutex
@@ -239,6 +239,8 @@ public final class HawtTxPageFile implements TxPageFile {
         this.synch = factory.isSync();
         this.file = pageFile.getFile();
         this.allocator = pageFile.allocator();
+
+        readCache = new ReadCache(factory.getCacheSize());
         
         if( factory.isUseWorkerThread() ) {
             worker = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -865,7 +867,11 @@ public final class HawtTxPageFile implements TxPageFile {
     // /////////////////////////////////////////////////////////////////
 
     final class ReadCache {
-        public final Map<Integer, Object> map = Collections.synchronizedMap(new LRUCache<Integer, Object>(1024));
+        public final Map<Integer, Object> map;
+
+        public ReadCache(int size) {
+            map = Collections.synchronizedMap(new LRUCache<Integer, Object>(size));
+        }
 
         @SuppressWarnings("unchecked") <T> T cacheLoad(PagedAccessor<T> marshaller, int pageId) {
             T rc = (T) map.get(pageId);
