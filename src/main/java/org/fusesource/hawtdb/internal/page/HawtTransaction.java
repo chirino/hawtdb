@@ -26,6 +26,7 @@ import org.fusesource.hawtdb.util.StringSupport;
 import org.fusesource.hawtbuf.Buffer;
 
 import static org.fusesource.hawtdb.internal.page.DeferredUpdate.*;
+import static org.fusesource.hawtdb.internal.page.Update.update;
 
 /**
  * Transaction objects are NOT thread safe. Users of this object should
@@ -34,6 +35,7 @@ import static org.fusesource.hawtdb.internal.page.DeferredUpdate.*;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 final class HawtTransaction implements Transaction {
+
     /**
      * 
      */
@@ -124,7 +126,8 @@ final class HawtTransaction implements Transaction {
         if (update == null) {
             // This is the first time this transaction updates the page...
             snapshot();
-            updates.put(page, deferred(parent.allocator.alloc(1)).store(value, marshaller).allocated() );
+            update = deferred(parent.allocator.alloc(1)).store(value, marshaller).allocated();
+            updates.put(page, update);
         } else {
             // We have updated it before...
             if( update.wasFreed() ) {
@@ -149,9 +152,12 @@ final class HawtTransaction implements Transaction {
         } else {
             if( update.wasDeferredStore() ) {
                 if( update.wasAllocated() ) {
-                    // this transaction created it.. so it should remove it..
-                    updates.put(page, update(update));
-                } else { 
+                    updates.put(page, update(page).allocated());
+                } else {
+                    // release the shadow page.
+                    if( update.page != page ) {
+                        parent.allocator.free(update.page, 1);
+                    }
                     // was an update of a previous location.... 
                     updates.put(page, deferred(page).clear(marshaller));
                 }
