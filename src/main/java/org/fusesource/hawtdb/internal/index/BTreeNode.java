@@ -16,18 +16,13 @@
  */
 package org.fusesource.hawtdb.internal.index;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtdb.api.*;
+
+import java.io.*;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.fusesource.hawtdb.api.*;
-import org.fusesource.hawtbuf.Buffer;
 
 
 /**
@@ -492,21 +487,28 @@ public final class BTreeNode<Key, Value> {
         }
     }
 
-    public void printStructure(BTreeIndex<Key, Value> index, PrintWriter out, String prefix) {
+    public void printStructure(BTreeIndex<Key, Value> index, PrintWriter out, String firstLinePrefix, String prefix) {
         if (prefix.length() > 0 && parent == null) {
             throw new IllegalStateException("Cycle back to root node detected.");
         }
 
         if (data.isBranch()) {
+            out.println(firstLinePrefix+"branch @ "+page+ " contains "+data.keys.length+" keys");
             for (int i = 0; i < data.children.length; i++) {
                 BTreeNode<Key, Value> child = getChild(index, i);
-                if (i == data.children.length - 1) {
-                    out.println(prefix + "\\- " + child.getPage() + (child.data.isBranch() ? " (" + child.data.children.length + ")" : ""));
-                    child.printStructure(index, out, prefix + "   ");
+                if (i < data.keys.length) {
+                    child.printStructure(index, out, prefix+"|-+ ", prefix+"|   ");
                 } else {
-                    out.println(prefix + "|- " + child.getPage() + (child.data.isBranch() ? " (" + child.data.children.length + ")" : "") + " : " + data.keys[i]);
-                    child.printStructure(index, out, prefix + "   ");
+                    child.printStructure(index, out, prefix+"\\-+ ", prefix+"    ");
                 }
+                if (i < data.keys.length ) {
+                    out.println(prefix+": " + data.keys[i]);
+                }
+            }
+        } else {
+            out.println(firstLinePrefix+"leaf @ "+page+ " contains "+data.keys.length+" keys");
+            for (int i = 0; i < data.keys.length; i++) {
+                out.println(prefix+": " + data.keys[i]);
             }
         }
     }

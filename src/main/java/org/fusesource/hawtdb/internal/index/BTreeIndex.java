@@ -106,12 +106,12 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
     }
 
     public void printStructure(PrintWriter out) {
-        root().printStructure(this, out, "");
+        root().printStructure(this, out, "", "");
     }
 
     public void printStructure(OutputStream out) {
         PrintWriter pw = new PrintWriter(out, false);
-        root().printStructure(this, pw, "");
+        root().printStructure(this, pw, "", "");
         pw.flush();
     }
 
