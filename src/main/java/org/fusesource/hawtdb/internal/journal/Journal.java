@@ -16,33 +16,24 @@
  */
 package org.fusesource.hawtdb.internal.journal;
 
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteCommand;
+import org.fusesource.hawtdb.util.Scheduler;
+import org.fusesource.hawtdb.util.list.LinkedNodeList;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteCommand;
-import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteKey;
-import org.fusesource.hawtdb.util.Scheduler;
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.DataByteArrayInputStream;
-import org.fusesource.hawtdb.util.list.LinkedNodeList;
+import static org.fusesource.hawtdb.internal.journal.Logging.*;
 
 /**
  * Manages DataFiles
@@ -70,9 +61,8 @@ public class Journal {
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
     public static final int PREFERED_DIFF = 1024 * 512;
 
-    private static final Log LOG = LogFactory.getLog(Journal.class);
 
-    protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
+    protected final Map<Location, WriteCommand> inflightWrites = new ConcurrentHashMap<Location, WriteCommand>();
 
     protected File directory = new File(DEFAULT_DIRECTORY);
     protected File directoryArchive = new File(DEFAULT_ARCHIVE_DIRECTORY);
@@ -145,7 +135,7 @@ public class Journal {
         	Location l = recoveryCheck(dataFiles.getTail());
             lastAppendLocation.set(l);
         } catch (IOException e) {
-            LOG.warn("recovery check failed", e);
+            warn(e, "recovery check failed");
         }
         
         cleanupTask = new Runnable() {
@@ -155,7 +145,7 @@ public class Journal {
         };
         Scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
         long end = System.currentTimeMillis();
-        LOG.trace("Startup took: "+(end-start)+" ms");
+        trace("Startup took: %d ms", (end-start));
     }
 
     private static byte[] bytes(String string) {
@@ -260,7 +250,7 @@ public class Journal {
         Integer key = Integer.valueOf(item.getDataFileId());
         DataFile dataFile = fileMap.get(key);
         if (dataFile == null) {
-            LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
+            error("Looking for key %d but not found in fileMap: %s", key, fileMap);
             throw new IOException("Could not locate data file " + getFile(item.getDataFileId()));
         }
         return dataFile;
@@ -270,7 +260,7 @@ public class Journal {
         Integer key = Integer.valueOf(item.getDataFileId());
         DataFile dataFile = fileMap.get(key);
         if (dataFile == null) {
-            LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
+            error("Looking for key %d but not found in fileMap: %s", key, fileMap);
             throw new IOException("Could not locate data file " + getFile(item.getDataFileId()));
         }
         return dataFile.getFile();
@@ -344,12 +334,12 @@ public class Journal {
         dataFile.unlink();
         if (archiveDataLogs) {
             dataFile.move(getDirectoryArchive());
-            LOG.debug("moved data file " + dataFile + " to " + getDirectoryArchive());
+            debug("moved data file %s to %s", dataFile, getDirectoryArchive());
         } else {
             if ( dataFile.delete() ) {
-            	LOG.debug("Discarded data file " + dataFile);
+            	debug("Discarded data file %s", dataFile);
             } else {
-            	LOG.warn("Failed to discard data file " + dataFile.getFile());
+            	warn("Failed to discard data file %s", dataFile.getFile());
             }
         }
     }
@@ -559,7 +549,7 @@ public class Journal {
         this.filePrefix = filePrefix;
     }
 
-    public Map<WriteKey, WriteCommand> getInflightWrites() {
+    public Map<Location, WriteCommand> getInflightWrites() {
         return inflightWrites;
     }
 

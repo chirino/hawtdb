@@ -42,7 +42,7 @@ class DataFileAppender {
     protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
 
     protected final Journal journal;
-    protected final Map<WriteKey, WriteCommand> inflightWrites;
+    protected final Map<Location, WriteCommand> inflightWrites;
     protected final Object enqueueMutex = new Object() {
     };
     protected WriteBatch nextWriteBatch;
@@ -54,31 +54,6 @@ class DataFileAppender {
 
     private boolean running;
     private Thread thread;
-
-    public static class WriteKey {
-        private final int file;
-        private final long offset;
-        private final int hash;
-
-        public WriteKey(Location item) {
-            file = item.getDataFileId();
-            offset = item.getOffset();
-            // TODO: see if we can build a better hash
-            hash = (int)(file ^ offset);
-        }
-
-        public int hashCode() {
-            return hash;
-        }
-
-        public boolean equals(Object obj) {
-            if (obj instanceof WriteKey) {
-                WriteKey di = (WriteKey)obj;
-                return di.file == file && di.offset == offset;
-            }
-            return false;
-        }
-    }
 
     public class WriteBatch {
 
@@ -252,7 +227,7 @@ class DataFileAppender {
 	            }
             }
             if (!write.sync) {
-                inflightWrites.put(new WriteKey(write.location), write);
+                inflightWrites.put(write.location, write);
             }
             return nextWriteBatch;
         }
@@ -378,7 +353,8 @@ class DataFileAppender {
                 write = wb.writes.getHead();
                 while (write != null) {
                     if (!write.sync) {
-                        inflightWrites.remove(new WriteKey(write.location));
+                        WriteCommand was = inflightWrites.remove(write.location);
+                        assert( was !=null );
                     }
                     if (write.onComplete != null) {
                         try {

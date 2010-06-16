@@ -21,7 +21,6 @@ import java.io.RandomAccessFile;
 import java.util.Map;
 
 import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteCommand;
-import org.fusesource.hawtdb.internal.journal.DataFileAppender.WriteKey;
 import org.fusesource.hawtdb.util.IOHelper;
 import org.fusesource.hawtbuf.Buffer;
 
@@ -34,14 +33,13 @@ import org.fusesource.hawtbuf.Buffer;
 final class DataFileAccessor {
 
     private final DataFile dataFile;
-    private final Map<WriteKey, WriteCommand> inflightWrites;
+    private final Map<Location, WriteCommand> inflightWrites;
     private final RandomAccessFile file;
     private boolean disposed;
 
     /**
      * Construct a Store reader
      * 
-     * @param fileId
      * @throws IOException
      */
     public DataFileAccessor(Journal dataManager, DataFile dataFile) throws IOException {
@@ -72,7 +70,7 @@ final class DataFileAccessor {
             throw new IOException("Invalid location: " + location);
         }
 
-        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(location);
         if (asyncWrite != null) {
             return asyncWrite.data;
         }
@@ -102,7 +100,7 @@ final class DataFileAccessor {
     }
 
     public void readLocationDetails(Location location) throws IOException {
-        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(location);
         if (asyncWrite != null) {
             location.setSize(asyncWrite.location.getSize());
             location.setType(asyncWrite.location.getType());
