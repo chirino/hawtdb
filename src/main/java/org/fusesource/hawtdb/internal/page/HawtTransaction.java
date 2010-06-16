@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.internal.page;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.fusesource.hawtdb.api.*;
@@ -57,8 +58,8 @@ final class HawtTransaction implements Transaction {
             // TODO: this is not a very efficient way to handle allocation ranges.
             int end = pageId+count;
             for (int key = pageId; key < end; key++) {
-                Update previous = getUpdates().put(key, update(key).freed() );
-                if( previous!=null && previous.wasAllocated() ) {
+                Update previous = getUpdates().put(key, update().freed(true).note("free "+key) );
+                if( previous!=null && previous.allocated() ) {
                     getUpdates().remove(key);
                     HawtTransaction.this.parent.allocator.free(key, 1);
                 }
@@ -66,11 +67,11 @@ final class HawtTransaction implements Transaction {
         }
         
         public int alloc(int count) throws OutOfSpaceException {
-            int pageId = HawtTransaction.this.parent.allocator.alloc(count);
+            int pageId = palloc(count);
             // TODO: this is not a very efficient way to handle allocation ranges.
             int end = pageId+count;
             for (int key = pageId; key < end; key++) {
-                getUpdates().put(key, update(key).allocated() );
+                getUpdates().put(key, update().allocated(true).note("alloc "+key) );
             }
             return pageId;
         }
@@ -101,7 +102,7 @@ final class HawtTransaction implements Transaction {
         // Perhaps the page was updated in the current transaction...
         Update update = updates == null ? null : updates.get(page);
         if( update != null ) {
-            if( update.wasFreed() ) {
+            if( update.freed() ) {
                 throw new PagingException("That page was freed.");
             }
             DeferredUpdate deferred = update.deferredUpdate();
@@ -123,24 +124,25 @@ final class HawtTransaction implements Transaction {
     public <T> void put(PagedAccessor<T> marshaller, int page, T value) {
         ConcurrentHashMap<Integer, Update> updates = getUpdates();
         Update update = updates.get(page);
+        DeferredUpdate deferred = null;
         if (update == null) {
             // This is the first time this transaction updates the page...
             snapshot();
-            update = deferred(parent.allocator.alloc(1)).store(value, marshaller).allocated();
-            updates.put(page, update);
+            deferred = deferred();
+            updates.put(page, deferred);
         } else {
             // We have updated it before...
-            if( update.wasFreed() ) {
+            if( update.freed() ) {
                 throw new PagingException("You should never try to update a page that has been freed.");
             }
-            
-            DeferredUpdate deferred = update.deferredUpdate();
+            deferred = update.deferredUpdate();
             if( deferred==null ) {
                 deferred = deferred(update);
                 updates.put(page, deferred);
             }
-            deferred.store(value, marshaller);
         }
+        deferred.note("put "+page);
+        deferred.put(value, marshaller);
     }
 
     public <T> void clear(PagedAccessor<T> marshaller, int page) {
@@ -148,21 +150,17 @@ final class HawtTransaction implements Transaction {
         Update update = updates.get(page);
         
         if( update == null ) {
-            updates.put(page, deferred(page).clear(marshaller) );
+            updates.put(page, deferred().remove(marshaller).note("clear "+page+" deferred") );
         } else {
-            if( update.wasDeferredStore() ) {
-                if( update.wasAllocated() ) {
-                    updates.put(page, update(page).allocated());
-                } else {
-                    // release the shadow page.
-                    if( update.page != page ) {
-                        parent.allocator.free(update.page, 1);
-                    }
-                    // was an update of a previous location.... 
-                    updates.put(page, deferred(page).clear(marshaller));
-                }
-            } else {
+            if( !update.put() ) {
                 throw new PagingException("You should never try to clear a page that was not put.");
+            }
+
+            if( update.allocated() ) {
+                updates.put(page, update(update).note("clear "+page+" back to un-deferred"));
+            } else {
+                // was an update of a previous location....
+                updates.put(page, ((DeferredUpdate)update).remove(marshaller).note("clear "+page));
             }
         }
     }
@@ -182,9 +180,9 @@ final class HawtTransaction implements Transaction {
     public void read(int page, Buffer buffer) throws IOPagingException {
         // We may need to translate the page due to an update..
         Update update = updates == null ? null : updates.get(page);
-        if (update != null) {
+        if (update != null && update.shadowed()) {
             // in this transaction..
-            page = update.page();
+            page = update.shadow();
         } else {
             // in a committed transaction that has not yet been performed.
             page = snapshot().getTracker().translatePage(page);
@@ -196,9 +194,9 @@ final class HawtTransaction implements Transaction {
         //TODO: wish we could do ranged opps more efficiently.
         
         if( type==SliceType.READ ) {
-            Update udpate = updates == null ? null : updates.get(page);
-            if (udpate != null) {
-                page = udpate.page();
+            Update update = updates == null ? null : updates.get(page);
+            if (update != null && update.shadowed() ) {
+                page = update.shadow();
             } else {
                 page = snapshot().getTracker().translatePage(page);
             }
@@ -207,10 +205,10 @@ final class HawtTransaction implements Transaction {
             if (update == null) {
 
                 // Allocate space of the update redo pages.
-                update = update(parent.allocator.alloc(count)).allocated();
+                update = update().shadow(palloc(count));
                 int end = page+count;
                 for (int i = page; i < end; i++) {
-                    getUpdates().put(i, update(i).allocated());
+                    getUpdates().put(i, update().shadow(i));
                 }
                 
                 if (type==SliceType.READ_WRITE) {
@@ -218,8 +216,9 @@ final class HawtTransaction implements Transaction {
                     // redo pages..
                     int originalPage = snapshot().getTracker().translatePage(page);
                     ByteBuffer slice = parent.pageFile.slice(SliceType.READ, originalPage, count);
+
                     try {
-                        parent.pageFile.write(update.page, slice);
+                        parent.pageFile.write(update.translate(page), slice);
                     } finally { 
                         parent.pageFile.unslice(slice);
                     }
@@ -229,12 +228,16 @@ final class HawtTransaction implements Transaction {
             }
             
             // translate the page..
-            page = update.page;
+            page = update.translate(page);
         }
         return parent.pageFile.slice(type, page, count);
         
     }
-    
+
+    private int palloc(int count) {
+        return parent.allocator.alloc(count);
+    }
+
     public void unslice(ByteBuffer buffer) {
         parent.pageFile.unslice(buffer);
     }
@@ -244,10 +247,14 @@ final class HawtTransaction implements Transaction {
         if (update == null) {
             // We are updating an existing page in the snapshot...
             snapshot();
-            update = update(parent.allocator.alloc(1)).allocated();
+            update = update().shadow(palloc(1));
             getUpdates().put(page, update);
         }
-        parent.pageFile.write(update.page(), buffer);
+
+        if( update.shadowed() ) {
+            page = update.shadow();
+        }
+        parent.pageFile.write(page, buffer);
     }
 
 
@@ -277,9 +284,11 @@ final class HawtTransaction implements Transaction {
     public void rollback() throws IOPagingException {
         try {
             if (updates!=null) {
-                for (Update update : updates.values()) {
-                    if( !update.wasFreed() ) {
-                        parent.allocator.free(update.page, 1);
+                for (Map.Entry<Integer,Update> entry : updates.entrySet()) {
+                    Integer page = entry.getKey();
+                    Update update = entry.getValue();
+                    if( !update.freed() ) {
+                        parent.allocator.free(update.translate(page), 1);
                     }
                 }
             }

@@ -16,19 +16,18 @@
  */
 package org.fusesource.hawtdb.internal.index;
 
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
+import org.fusesource.hawtdb.api.*;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.fusesource.hawtdb.api.*;
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.DataByteArrayInputStream;
-import org.fusesource.hawtbuf.DataByteArrayOutputStream;
-
+import static org.fusesource.hawtdb.internal.index.Logging.debug;
 
 /**
  * Hash Index implementation.  The hash buckets store entries in a b+tree.
@@ -37,7 +36,6 @@ import org.fusesource.hawtbuf.DataByteArrayOutputStream;
  */
 public class HashIndex<Key,Value> implements Index<Key,Value> {
     
-    private static final Log LOG = LogFactory.getLog(HashIndex.class);
     private final BTreeIndexFactory<Key, Value> BIN_FACTORY = new BTreeIndexFactory<Key, Value>();
     
     private final Paged paged;
@@ -169,7 +167,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     // Helper methods Methods
     // /////////////////////////////////////////////////////////////////
     private void changeCapacity(final int capacity) {
-        LOG.debug("Resizing to: "+capacity);
+        debug("Resizing to: %d", capacity);
         
         Buckets<Key, Value> next = new Buckets<Key, Value>(this);
         next.create(capacity);
@@ -193,7 +191,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         buckets = next;
         storeBuckets();
         
-        LOG.debug("Resizing done.  New bins start at: "+buckets.bucketsPage);        
+        debug("Resizing done.  New bins start at: %d", buckets.bucketsPage);        
     }
 
     public String toString() {
@@ -327,7 +325,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             return buckets;
         }
         
-        public List<Integer> remove(Paged paged, int page) {
+        public List<Integer> pagesLinked(Paged paged, int page) {
             return Collections.emptyList();
         }
         

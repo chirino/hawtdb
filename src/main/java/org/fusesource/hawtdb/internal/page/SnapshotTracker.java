@@ -76,7 +76,9 @@ final class SnapshotTracker {
                 
                 Update update = commit.updates.get(rc);
                 if( update!=null ) {
-                    rc = update.page();
+                    if( update.shadowed() ) {
+                        rc = update.shadow();
+                    }
                     break outer;
                 }
                 commit = commit.getPreviousCircular();

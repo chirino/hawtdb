@@ -16,6 +16,11 @@
  */
 package org.fusesource.hawtdb.internal.page;
 
+import org.fusesource.hawtdb.api.Allocator;
+import org.fusesource.hawtdb.api.Paged;
+import org.fusesource.hawtdb.util.list.LinkedNode;
+import org.fusesource.hawtdb.util.list.LinkedNodeList;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -23,13 +28,12 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
-import org.fusesource.hawtdb.api.Allocator;
-import org.fusesource.hawtdb.api.Paged;
-import org.fusesource.hawtdb.util.list.LinkedNode;
-import org.fusesource.hawtdb.util.list.LinkedNodeList;
+import static org.fusesource.hawtdb.internal.page.Logging.trace;
+import static org.fusesource.hawtdb.internal.page.Logging.traced;
+import static org.fusesource.hawtdb.internal.page.Update.update;
 
 /**
  * Aggregates a group of commits so that they can be more efficiently
@@ -38,6 +42,7 @@ import org.fusesource.hawtdb.util.list.LinkedNodeList;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<Commit> {
+
     private static final long serialVersionUID = 1188640492489990493L;
     
     /** the pageId that this redo batch is stored at */
@@ -70,7 +75,7 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     }
 
     public String toString() { 
-        return "{ page: "+this.page+", base: "+base+", head: "+head+", snapshots: "+snapshots+", entries: "+ commits.size()+" }";
+        return "{ page: "+this.page+", base: "+base+", head: "+head+", snapshots: "+snapshots+", commits: "+ commits.size()+", previous: "+previous+" }";
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -143,25 +148,46 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
         };
     }
 
-    public void performDefferedUpdates(Paged pageFile) {            
+    public void performDeferredUpdates(Paged pageFile) {
         for (Commit commit : this) {
+            assert(commit.stillSane());
             if( commit.updates != null ) {
                 for (Entry<Integer, Update> entry : commit.updates.entrySet()) {
+
+                    Integer page = entry.getKey();
                     DeferredUpdate du = entry.getValue().deferredUpdate();
+
                     if( du == null ) {
                         continue;
                     }
-                    if( du.wasDeferredClear() ) {
-                        List<Integer> freePages = du.marshaller.remove(pageFile, du.page);
-                        for (Integer page : freePages) {
-                            commit.merge(pageFile.allocator(), page, Update.update(page).freed());
+
+                    assert !du.shadowed() : "deferred update should not have a shadow page.";
+                    if( du.removed() ) {
+                        assert(!du.put());
+
+                        List<Integer> freePages = du.marshaller.pagesLinked(pageFile, page);
+                        for (Integer linkedPage : freePages) {
+                            commit.merge(pageFile.allocator(), linkedPage, update().freed(true));
                         }
-                    } else if( du.wasDeferredStore() ) {
-                        List<Integer> allocatedPages = du.store(pageFile);
-                        for (Integer page : allocatedPages) {
-                            // add any allocated pages to the update list so that the free 
+                    }
+
+                    if( du.put() ) {
+                        assert(!du.removed());
+
+                        if( !du.allocated() ) {
+                            // update has to occur on a shadow page.
+                            du.shadow(pageFile.allocator().alloc(1));
+                        }
+
+                        List<Integer> linkedPages = du.marshaller.store(pageFile, du.translate(page), du.value);
+                        if( traced(page) ) {
+                            trace("storing update of %d at %d linked pages: %s", page, du.translate(page), linkedPages);
+                        }
+                        
+                        for (Integer linkedPage : linkedPages) {
+                            // add any allocated pages to the update list so that the free
                             // list gets properly adjusted.
-                            commit.merge(pageFile.allocator(), page, Update.update(page).allocated());
+                            commit.merge(pageFile.allocator(), linkedPage, update().allocated(true));
                         }
                     }
                 }
@@ -174,11 +200,15 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
             for (Entry<Integer, Update> entry : commit.updates.entrySet()) {
                 int key = entry.getKey();
                 Update value = entry.getValue();
-                if( value.wasFreed() ) {
+
+                if( value.freed() ) {
+                    assert(!value.shadowed());
                     allocator.free(key, 1);
-                } else if( key != value.page ) {
-                    // need to free the udpate page..
-                    allocator.free(value.page, 1);
+                }
+                if( value.shadowed()) {
+                    assert(!value.freed());
+                    // need to free the shadow page..
+                    allocator.free(value.shadow(), 1);
                 }
             }
         }

@@ -61,11 +61,10 @@ public interface PagedAccessor<T> {
     T load(Paged paged, int page);
     
     /**
-     * Frees any pages associated with the value stored at the given page if any.  Does not free
-     * the page supplied.
+     * Returns a list of the pages linked to the specified page.
      * 
      * @param paged
      * @param page
      */
-    List<Integer> remove(Paged paged, int page);
+    List<Integer> pagesLinked(Paged paged, int page);
 }

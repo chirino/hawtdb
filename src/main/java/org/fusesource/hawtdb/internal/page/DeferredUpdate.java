@@ -34,20 +34,21 @@ import org.fusesource.hawtdb.api.Paged;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 class DeferredUpdate extends Update {
-    PagedAccessor<?> marshaller;
+    
+    PagedAccessor<Object> marshaller;
     Object value;
 
+    public DeferredUpdate() {
+        super();
+    }
     public DeferredUpdate(Update update) {
         super(update);
     }
-    public DeferredUpdate(int page) {
-        super(page);
+
+    public static DeferredUpdate deferred() {
+        return new DeferredUpdate();
     }
-    
-    public static DeferredUpdate deferred(int page) {
-        return new DeferredUpdate(page);
-    }
-    
+
     public static DeferredUpdate deferred(Update update) {
         return new DeferredUpdate(update);
     }
@@ -56,17 +57,17 @@ class DeferredUpdate extends Update {
         return this;
     }
     
-    public DeferredUpdate store(Object value, PagedAccessor<?> marshaller) {
+    public DeferredUpdate put(Object value, PagedAccessor<?> marshaller) {
         this.value = value;
-        this.marshaller = marshaller;
-        flags = (byte) ((flags & ~PAGE_CLEAR) | PAGE_STORE);
+        this.marshaller = (PagedAccessor<Object>) marshaller;
+        flags = (byte) ((flags & ~PAGE_REMOVE) | PAGE_PUT);
         return this;
     }
 
-    public DeferredUpdate clear(PagedAccessor<?> marshaller) {
-        this.marshaller= marshaller;
+    public DeferredUpdate remove(PagedAccessor<?> marshaller) {
+        this.marshaller= (PagedAccessor<Object>) marshaller;
         this.value=null;
-        flags = (byte) ((flags & ~PAGE_STORE) | PAGE_CLEAR);
+        flags = (byte) ((flags & ~PAGE_PUT) | PAGE_REMOVE);
         return this;
     }
     
@@ -75,11 +76,6 @@ class DeferredUpdate extends Update {
         return (T) value;
     }
     
-    @SuppressWarnings("unchecked")
-    public List<Integer> store(Paged paged) {
-        return ((PagedAccessor)marshaller).store(paged, page, value);
-    }
-
     public Object writeReplace() throws ObjectStreamException {
         return new Update(this);
     }

@@ -179,7 +179,46 @@ public class Extent {
     public int getNext() {
         return next;
     }
-    
+
+    /**
+     * Gets a listing of all the pages used by the extent at the specified page.
+     *
+     * @param paged
+     * @param page
+     */
+    public static List<Integer> pagesLinked(Paged paged, int page) {
+        return freeLinked(paged, page, DEFAULT_MAGIC);
+    }
+
+    public static List<Integer> pagesLinked(Paged paged, int page, Buffer magic) {
+        Extent extent = new Extent(paged, page, magic);
+        extent.readHeader();
+        return pages(paged, extent.getNext());
+    }
+
+    public static List<Integer> pages(Paged paged, int page) {
+        return pages(paged, page, DEFAULT_MAGIC);
+    }
+
+    public static List<Integer> pages(Paged paged, int page, Buffer magic) {
+        ArrayList<Integer> rc = new ArrayList<Integer>();
+        while( page>=0 ) {
+            Extent extent = new Extent(paged, page, magic);
+            extent.readHeader();
+            try {
+                int pagesInExtent = paged.pages(extent.getLength());
+                for( int i=0; i < pagesInExtent; i++) {
+                    rc.add(page+i);
+                }
+                page=extent.getNext();
+            } finally {
+                extent.readClose();
+            }
+        }
+        return rc;
+    }
+
+
     /**
      * Frees the linked extents at the provided page id.
      * 

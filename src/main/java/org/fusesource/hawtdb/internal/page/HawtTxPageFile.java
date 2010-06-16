@@ -16,12 +16,25 @@
  */
 package org.fusesource.hawtdb.internal.page;
 
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
+import org.fusesource.hawtdb.api.*;
+import org.fusesource.hawtdb.api.Paged.SliceType;
+import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
+import org.fusesource.hawtdb.internal.util.Ranges;
+import org.fusesource.hawtdb.util.LRUCache;
+import org.fusesource.hawtdb.util.list.LinkedNodeList;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -29,18 +42,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.zip.CRC32;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.fusesource.hawtdb.api.*;
-import org.fusesource.hawtdb.api.PagedAccessor;
-import org.fusesource.hawtdb.api.Paged.SliceType;
-import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
-import org.fusesource.hawtdb.internal.util.Ranges;
-import org.fusesource.hawtdb.util.LRUCache;
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.DataByteArrayInputStream;
-import org.fusesource.hawtbuf.DataByteArrayOutputStream;
-import org.fusesource.hawtdb.util.list.LinkedNodeList;
+import static org.fusesource.hawtdb.internal.page.Logging.*;
 
 /**
  * Provides concurrent page file access via Multiversion concurrency control
@@ -62,7 +64,6 @@ import org.fusesource.hawtdb.util.list.LinkedNodeList;
  */
 public final class HawtTxPageFile implements TxPageFile {
 
-    private static final Log LOG = LogFactory.getLog(HawtTxPageFile.class);
     public static final int FILE_HEADER_SIZE = 1024 * 4;
     public static final  byte[] MAGIC = magic(); 
 
@@ -353,6 +354,7 @@ public final class HawtTxPageFile implements TxPageFile {
         }
         
         if( fullBatch ) {
+            trace("batch full.");
             synchronized (HOUSE_KEEPING_MUTEX) {
                 storeBatches(false);
             }
@@ -372,7 +374,6 @@ public final class HawtTxPageFile implements TxPageFile {
         synchronized (HOUSE_KEEPING_MUTEX) {
             // TODO: do the following actions async.
             syncBatches();
-            performBatches();
         }
     }
     
@@ -424,11 +425,12 @@ public final class HawtTxPageFile implements TxPageFile {
                 throw new PagingException("The file header is not of the expected type.");
             }
 
-            LOG.debug("recovery started.  header: "+header);
+            trace("recovery started.  header: %s", header);
 
             // Initialize the free page list.
             if( header.free_list_page >= 0 ) {
                 storedFreeList = loadObject(header.free_list_page);
+                trace("loaded free page list: %s ", storedFreeList);
                 allocator.copy(storedFreeList);
                 Extent.unfree(pageFile, header.free_list_page);
             } else {
@@ -446,7 +448,7 @@ public final class HawtTxPageFile implements TxPageFile {
             boolean consistencyCheckNeeded = true;
             while( pageId >= 0  ) {
 
-                LOG.trace("loading batch at: "+pageId);
+                trace("loading batch at: %d", pageId);
                 Batch batch = null;
 
                 if( pageId == header.pessimistic_recovery_page) {
@@ -458,7 +460,7 @@ public final class HawtTxPageFile implements TxPageFile {
                     try {
                         batch = loadObject(pageId);
                     } catch(Exception e) {
-                        LOG.trace("incomplete batch at: "+pageId);
+                        trace("incomplete batch at: %d", pageId);
                         // clear out any previously loaded batchs.. and
                         // resume from the pessimistic location.
                         loaded.clear();
@@ -474,7 +476,7 @@ public final class HawtTxPageFile implements TxPageFile {
                 batch.recovered = true;
                 loaded.add(batch);
 
-                LOG.trace("loaded batch: "+batch);
+                trace("loaded batch: %s", batch);
 
                 // is this the last batch we need to load?
                 if( header.base_revision+1 == batch.base ) {
@@ -485,7 +487,7 @@ public final class HawtTxPageFile implements TxPageFile {
             }
 
             if( loaded.isEmpty() ) {
-                LOG.trace("no batches need to be recovered.");
+                trace("no batches need to be recovered.");
             } else {
 
                 // link up the batch objects...
@@ -593,14 +595,14 @@ public final class HawtTxPageFile implements TxPageFile {
         }
         
         // Write any outstanding deferred cache updates...
-        batch.performDefferedUpdates(pageFile);
+        batch.performDeferredUpdates(pageFile);
 
         // Link it to the last batch.
         batch.previous = lastBatchPage; 
         
         // Store the batch record.
         lastBatchPage = batch.page = storeObject(batch);
-        LOG.trace("stored batch: "+batch);
+        trace("stored batch: %s", batch);
 
 
         // Update the header to know about the new batch page.
@@ -682,6 +684,9 @@ public final class HawtTxPageFile implements TxPageFile {
         if (previousFreeListPage >= 0) {
             Extent.free(pageFile, previousFreeListPage);
         }
+
+        // apply any batches that can be applied..
+        performBatches();
     }
 
     /**
@@ -706,7 +711,7 @@ public final class HawtTxPageFile implements TxPageFile {
         
         while( storedBatches!=storingBatches ) {
 
-            LOG.trace("Performing batch: "+storedBatches);
+            trace("Performing batch: %s", storedBatches);
 
             // Performing the batch actually applies the updates to the original page locations.
             for (Commit commit : storedBatches) {
@@ -714,19 +719,26 @@ public final class HawtTxPageFile implements TxPageFile {
                     int page = entry.getKey();
                     Update update = entry.getValue();
 
+                    if( traced(page) || (update.shadowed() && traced(update.shadow())) ) {
+                        trace("performing update at %d %s", page, update);
+                    }
                     // is it a shadow update?
-                    if( page != update.page ) {
+                    if( update.shadowed() ) {
                         
                         if( storedBatches.recovered ) {
                             // If we are recovering, the allocator MIGHT not have the shadow
                             // page as being allocated.  This makes sure it's allocated so that
                             // new transaction to get this page and overwrite it in error.
-                            allocator.unfree(update.page, 1);
+                            allocator.unfree(update.shadow(), 1);
                         }
                         
                         // Perform the update by copying the updated page the original
                         // page location.
-                        ByteBuffer slice = pageFile.slice(SliceType.READ, update.page, 1);
+
+                        if( traced(page) || traced(update.shadow()) ) {
+                            trace("performing shadow update on %d from %d",page,update.shadow());
+                        }
+                        ByteBuffer slice = pageFile.slice(SliceType.READ, update.shadow(), 1);
                         try {
                             pageFile.write(page, slice);
                         } finally { 
@@ -734,7 +746,7 @@ public final class HawtTxPageFile implements TxPageFile {
                         }
                         
                     }
-                    if( update.wasAllocated() ) {
+                    if( update.allocated() ) {
                         
                         if( storedBatches.recovered ) {
                             // If we are recovering, the allocator MIGHT not have this 
@@ -745,16 +757,16 @@ public final class HawtTxPageFile implements TxPageFile {
                         // Update the persistent free list.  This gets stored on the next sync.
                         storedFreeList.remove(page, 1);
                         
-                    } else if( update.wasFreed() ) {
+                    } else if( update.freed() ) {
                         storedFreeList.add(page, 1);
                     }
 
                     // update the read cache..
                     DeferredUpdate du = update.deferredUpdate();
                     if( du != null ) {
-                        if( du.wasDeferredClear() ) {
+                        if( du.removed() ) {
                             readCache.map.remove(page);
-                        } else if( du.wasDeferredStore() ) {
+                        } else if( du.put() ) {
                             readCache.map.put(page, du.value);
                         }
                     }
@@ -858,7 +870,7 @@ public final class HawtTxPageFile implements TxPageFile {
     }
     
     private void storeHeader() {
-        LOG.trace("storing file header: "+header);
+        trace("storing file header: %s", header);
         file.write(0, header.encode());
     }    
     

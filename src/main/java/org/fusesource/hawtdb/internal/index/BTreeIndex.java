@@ -180,13 +180,13 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         } else {
             
             if( node.storedInExtent ) {
-                DATA_ENCODER_DECODER.remove(paged, node.page);
+                DATA_ENCODER_DECODER.pagesLinked(paged, node.page);
             }
             
             if (node.isLeaf()) {
                 List<Integer> pages = DATA_ENCODER_DECODER.store(paged, node.page, node.data);
                 if( !node.allowPageOverflow() && pages.size()>1 ) {
-                    DATA_ENCODER_DECODER.remove(paged, node.page);
+                    DATA_ENCODER_DECODER.pagesLinked(paged, node.page);
                     node.storedInExtent=false;
                     return false;
                 }
@@ -244,7 +244,7 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
             paged.clear(DATA_ENCODER_DECODER, node.page);
         } else {
             if ( node.storedInExtent ) {
-                DATA_ENCODER_DECODER.remove(paged, node.page);
+                DATA_ENCODER_DECODER.pagesLinked(paged, node.page);
             }
         }
         paged.free(node.page);

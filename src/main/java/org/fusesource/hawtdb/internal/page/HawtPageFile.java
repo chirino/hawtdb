@@ -16,13 +16,14 @@
  */
 package org.fusesource.hawtdb.internal.page;
 
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtdb.api.PageFile;
+import org.fusesource.hawtdb.api.PagedAccessor;
+import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
+
 import java.nio.ByteBuffer;
 
-import org.fusesource.hawtdb.api.PagedAccessor;
-import org.fusesource.hawtdb.api.PageFile;
-import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
-import org.fusesource.hawtbuf.Buffer;
-
+import static org.fusesource.hawtdb.internal.page.Logging.*;
 
 /**
  * Provides a {@link PageFile} interface to a {@link MemoryMappedFile}. 
@@ -30,7 +31,7 @@ import org.fusesource.hawtbuf.Buffer;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class HawtPageFile implements PageFile {
-    
+
     private final SimpleAllocator allocator;
     private final short pageSize;
     private final int headerSize;
@@ -62,14 +63,24 @@ public class HawtPageFile implements PageFile {
     }
 
     public void read(int pageId, Buffer buffer) {
+        if( traced(pageId) ) {
+            trace("read: %d", pageId);
+        }
 		file.read(offset(pageId), buffer);
 	}
 
 	public void write(int pageId, Buffer buffer) {
+        if( traced(pageId) ) {
+            trace("write: %d", pageId);
+        }
 		file.write(offset(pageId), buffer);
 	}
 	
 	public ByteBuffer slice(SliceType type, int pageId, int size) {
+        if( traced(pageId) ) {
+            trace("slice: %d, type %s", pageId, type);
+        }
+
         assert size > 0;
         return file.slice(type==SliceType.READ, offset(pageId), pageSize*size);
     }
@@ -101,7 +112,7 @@ public class HawtPageFile implements PageFile {
     }
 
     public <T> void clear(PagedAccessor<T> pagedAccessor, int page) {
-        pagedAccessor.remove(this, page);
+        pagedAccessor.pagesLinked(this, page);
     }
     
     ///////////////////////////////////////////////////////////////////
@@ -114,6 +125,9 @@ public class HawtPageFile implements PageFile {
      * @see org.fusesource.hawtdb.internal.page.PageFile#write(int, java.nio.ByteBuffer)
      */
     public void write(int pageId, ByteBuffer buffer) {
+        if( traced(pageId) ) {
+            trace("write to: %d", pageId);
+        }
         file.write(offset(pageId), buffer);
     }
 

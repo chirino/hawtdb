@@ -16,6 +16,10 @@
  */
 package org.fusesource.hawtdb.internal.page;
 
+import org.fusesource.hawtdb.api.Allocator;
+import org.fusesource.hawtdb.api.OptimisticUpdateException;
+import org.fusesource.hawtdb.util.list.LinkedNode;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -24,9 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.fusesource.hawtdb.api.Allocator;
-import org.fusesource.hawtdb.api.OptimisticUpdateException;
-import org.fusesource.hawtdb.util.list.LinkedNode;
+import static org.fusesource.hawtdb.internal.page.Logging.trace;
+import static org.fusesource.hawtdb.internal.page.Logging.traced;
 
 /**
  * Tracks the updates that were part of a transaction commit.
@@ -83,7 +86,11 @@ final class Commit extends LinkedNode<Commit> implements Externalizable {
         // merge all the entries in the update..
         for (Entry<Integer, Update> entry : updates.entrySet()) {
             merge(allocator, entry.getKey(), entry.getValue());
+            if( traced(entry.getKey()) ) {
+                trace("merged: %s");
+            }
         }
+        assert(stillSane());
     }
 
     /**
@@ -93,34 +100,86 @@ final class Commit extends LinkedNode<Commit> implements Externalizable {
      * @param update
      */
     void merge(Allocator allocator, int page, Update update) {
+
+        assert !(update.allocated() && update.shadowed() && update.freed()) : "This update can't be in multiple states";
+
         Update previous = this.updates.put(page, update);
         if (previous != null) {
-            
-            if( update.wasFreed() ) {
-                // we can undo the previous update
-                if( previous.page != page ) {
-                    allocator.free(previous.page, 1);
+            previous.history.addAll(update.history);
+            update.history = previous.history;
+            if( update.freed() ) {
+
+                assert !previous.freed(): "free can not follow a free.";
+
+                // yes the previous page can be allocated and shadowed since
+                // a shadow update can be merged onto a an allocation
+
+                if( previous.shadowed() ) {
+                    update.note("free previous shadow: "+previous.shadow());
+                    allocator.free(previous.shadow(), 1);
                 }
-                if( previous.wasAllocated() ) {
+
+
+                if( previous.allocated() ) {
                     allocator.free(page, 1);
+
+                    // in this case the update is canceled out since the
+                    // page never made it to disk.
+                    this.updates.remove(page);
                 }
-                this.updates.remove(page);
-                
-                // No other merging is needed now..
-                return;
-            }
-            
-            // we are undoing the previous update /w this new update.
-            if( previous.page != page ) {
-                allocator.free(previous.page, 1);
-            }
-            
-            // we may be updating a previously allocated page,
-            // if so we need to mark the new page as allocated too.
-            if( previous.wasAllocated() ) {
-                update.allocated();
+
+
+            } else if(update.allocated()) {
+
+                if( !previous.freed() ) {
+                    assert previous.freed(): "allocation updates can only follow freed updates.";
+                }
+                assert !(previous.allocated() && previous.shadowed()): "Unexpected previous state.";
+
+                if( !update.put() ) {
+                    // in this case the update cancels out.
+                    this.updates.remove(page);
+                }
+
+            } else if(update.shadowed()) {
+
+                // Yes.. it's possible to be allocated and then shadowed.
+                if( previous.allocated() ) {
+                    update.allocated(true);
+                }
+
+                if( previous.shadowed() ) {
+                    update.note("free previous shadow: "+previous.shadow());
+                    allocator.free(previous.shadow(), 1);
+                }
+
+            } else if( update.deferredUpdate()!=null ) {
+                assert !previous.shadowed() : "deferred updates should not have shadows assigned.";
+
+                if( previous.allocated() ) {
+                    update.allocated(true);
+                }
+            } else {
+                throw new AssertionError("Unexpected update state");
             }
         }
+    }
+
+    public boolean stillSane() {
+        for (Entry<Integer, Update> entry : updates.entrySet()) {
+            int page = entry.getKey();
+            Update update = entry.getValue();
+
+            // is a shadow update?
+            if( update.shadowed() ) {
+                final Update badboy = updates.get(update.shadow());
+                if( badboy !=null ) {
+                    throw new AssertionError("a normal page ("+page+") is also being used as a shadow page ("+update.shadow() +").");
+                }
+            }
+
+        }
+        return true;
     }
 
     @SuppressWarnings("unchecked")

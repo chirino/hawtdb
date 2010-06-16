@@ -73,8 +73,8 @@ abstract public class AbstractStreamPagedAccessor<T>  implements PagedAccessor<T
 
     }
 
-    public List<Integer> remove(Paged paged, int page) {
-        return Extent.freeLinked(paged, page);
+    public List<Integer> pagesLinked(Paged paged, int page) {
+        return Extent.pagesLinked(paged, page);
     }
 
 
