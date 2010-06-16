@@ -25,7 +25,7 @@ import org.fusesource.hawtdb.api.Index;
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class DefferedBTreeIndexTest extends BTreeIndexTest {
+public class DeferredBTreeIndexTest extends BTreeIndexTest {
 
     @Override
     protected Index<String, Long> createIndex(int page) {

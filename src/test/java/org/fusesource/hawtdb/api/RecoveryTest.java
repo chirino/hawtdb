@@ -16,6 +16,7 @@
  */
 package org.fusesource.hawtdb.api;
 
+import org.fusesource.hawtbuf.codec.LongCodec;
 import org.fusesource.hawtbuf.codec.StringCodec;
 import org.junit.After;
 import org.junit.Before;
@@ -62,9 +63,9 @@ public class RecoveryTest {
         pf = pff.getTxPageFile();
     }
 
-    private static final BTreeIndexFactory<String,String> ROOT_FACTORY = new BTreeIndexFactory<String,String>();
+    private static final BTreeIndexFactory<Long,String> ROOT_FACTORY = new BTreeIndexFactory<Long,String>();
     static {
-        ROOT_FACTORY.setKeyCodec(StringCodec.INSTANCE);
+        ROOT_FACTORY.setKeyCodec(LongCodec.INSTANCE);
         ROOT_FACTORY.setValueCodec(StringCodec.INSTANCE);
         ROOT_FACTORY.setDeferredEncoding(true);
     }
@@ -75,7 +76,7 @@ public class RecoveryTest {
         // Create the root index at the root page.
         Transaction tx = pf.tx();
         assertEquals(0, tx.alloc());
-        SortedIndex<String, String> root = ROOT_FACTORY.create(tx, 0);
+        SortedIndex<Long, String> root = ROOT_FACTORY.create(tx, 0);
         tx.commit();
         pf.flush();
 
@@ -108,7 +109,7 @@ public class RecoveryTest {
                 // do a couple of random inserts and deletes.
                 for(int keyLoop=0; keyLoop < 10; keyLoop ++) {
 
-                    String key = "ID:"+random.nextInt(MAX_KEY)+":key";
+                    Long key = (long)random.nextInt(MAX_KEY);
                     String value = root.get(key);
                     if( value == null ) {
                         root.put(key, "value");

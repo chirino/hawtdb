@@ -41,7 +41,7 @@ import org.junit.Test;
  * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class ConcurrentPageFileTest {
+public class TxPageFileTest {
 
     private TxPageFileFactory pff;
     private TxPageFile pf;
@@ -103,13 +103,13 @@ public class ConcurrentPageFileTest {
 
     private final class StringPagedAccessor implements PagedAccessor<String> {
         public String load(Paged paged, int page) {
-            return ConcurrentPageFileTest.this.load(paged, page);
+            return TxPageFileTest.this.load(paged, page);
         }
         public List<Integer> store(Paged paged, int page, String value) {
-            ConcurrentPageFileTest.this.store(paged, page, value);
+            TxPageFileTest.this.store(paged, page, value);
             return Collections.emptyList();
         }
-        public List<Integer> remove(Paged paged, int page) {
+        public List<Integer> pagesLinked(Paged paged, int page) {
             return Collections.emptyList();
         }
     }
