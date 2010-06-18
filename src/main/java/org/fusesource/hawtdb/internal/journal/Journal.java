@@ -52,7 +52,8 @@ public class Journal {
     // Batch Control Item holds a 4 byte size of the batch and a 8 byte checksum of the batch. 
     public static final byte[] BATCH_CONTROL_RECORD_MAGIC = bytes("WRITE BATCH");
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
-    
+    protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
+
     public static final String DEFAULT_DIRECTORY = ".";
     public static final String DEFAULT_ARCHIVE_DIRECTORY = "data-archive";
     public static final String DEFAULT_FILE_PREFIX = "db-";
@@ -86,6 +87,9 @@ public class Journal {
     protected boolean archiveDataLogs;
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
+
+    int maxWriteBatchSize = DEFAULT_MAX_BATCH_SIZE;
+
 
     public synchronized void start() throws IOException {
         if (started) {
@@ -637,5 +641,12 @@ public class Journal {
 		this.checksum = checksumWrites;
 	}
 
+    public int getMaxWriteBatchSize() {
+        return maxWriteBatchSize;
+    }
+
+    public void setMaxWriteBatchSize(int maxWriteBatchSize) {
+        this.maxWriteBatchSize = maxWriteBatchSize;
+    }
 
 }

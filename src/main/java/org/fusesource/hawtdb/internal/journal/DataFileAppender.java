@@ -39,7 +39,6 @@ import org.fusesource.hawtdb.util.list.LinkedNodeList;
  */
 class DataFileAppender {
 
-    protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
 
     protected final Journal journal;
     protected final Map<Location, WriteCommand> inflightWrites;
@@ -50,7 +49,6 @@ class DataFileAppender {
     protected boolean shutdown;
     protected IOException firstAsyncException;
     protected final CountDownLatch shutdownDone = new CountDownLatch(1);
-    protected int maxWriteBatchSize = DEFAULT_MAX_BATCH_SIZE;
 
     private boolean running;
     private Thread thread;
@@ -75,7 +73,7 @@ class DataFileAppender {
 
         public boolean canAppend(WriteCommand write) {
             int newSize = size + write.location.getSize();
-			if (newSize >= maxWriteBatchSize || offset+newSize > journal.getMaxFileLength() ) {
+			if (newSize >= journal.maxWriteBatchSize || offset+newSize > journal.getMaxFileLength() ) {
                 return false;
             }
             return true;
@@ -266,7 +264,7 @@ class DataFileAppender {
         RandomAccessFile file = null;
         try {
 
-            DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);
+            DataByteArrayOutputStream buff = new DataByteArrayOutputStream(journal.maxWriteBatchSize);
             while (true) {
 
                 Object o = null;
