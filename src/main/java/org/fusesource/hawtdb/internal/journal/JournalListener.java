@@ -22,8 +22,13 @@ package org.fusesource.hawtdb.internal.journal;
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public interface JournalCallback {
+public interface JournalListener {
 
-    public void success(Location location);
+    public interface Write {
+        Location getLocation();
+        Object getAttachment();
+    }
+
+    public void synced(Write[] writes);
 
 }

@@ -89,6 +89,7 @@ public class Journal {
     protected boolean checksum;
 
     int maxWriteBatchSize = DEFAULT_MAX_BATCH_SIZE;
+    protected JournalListener listener;
 
 
     public synchronized void start() throws IOException {
@@ -522,8 +523,8 @@ public class Journal {
         return loc;
     }
 
-    public synchronized Location write(Buffer data, JournalCallback onComplete) throws IOException, IllegalStateException {
-        Location loc = appender.storeItem(data, Location.USER_TYPE, onComplete);
+    public synchronized Location write(Buffer data, Object attachment) throws IOException, IllegalStateException {
+        Location loc = appender.storeItem(data, Location.USER_TYPE, attachment);
         return loc;
     }
 
@@ -649,4 +650,11 @@ public class Journal {
         this.maxWriteBatchSize = maxWriteBatchSize;
     }
 
+    public JournalListener getListener() {
+        return listener;
+    }
+
+    public void setListener(JournalListener listener) {
+        this.listener = listener;
+    }
 }

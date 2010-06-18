@@ -90,24 +90,32 @@ class DataFileAppender {
         }
     }
 
-    public static class WriteCommand extends LinkedNode<WriteCommand> {
+    public static class WriteCommand extends LinkedNode<WriteCommand> implements JournalListener.Write {
         public final Location location;
-        public final Buffer data;
+        public final Object attachment;
         final boolean sync;
-        public final JournalCallback onComplete;
+        public Buffer data;
 
         public WriteCommand(Location location, Buffer data, boolean sync) {
             this.location = location;
             this.data = data;
             this.sync = sync;
-            this.onComplete = null;
+            this.attachment = null;
         }
 
-        public WriteCommand(Location location, Buffer data, JournalCallback onComplete) {
+        public WriteCommand(Location location, Buffer data, Object attachment) {
             this.location = location;
             this.data = data;
-            this.onComplete = onComplete;
+            this.attachment = attachment;
             this.sync = false;
+        }
+
+        public Location getLocation() {
+            return location;
+        }
+
+        public Object getAttachment() {
+            return attachment;
         }
     }
 
@@ -153,7 +161,7 @@ class DataFileAppender {
         return location;
     }
 
-    public Location storeItem(Buffer data, byte type, JournalCallback onComplete) throws IOException {
+    public Location storeItem(Buffer data, byte type, Object attachment) throws IOException {
         // Write the packet our internal buffer.
         int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
 
@@ -162,7 +170,7 @@ class DataFileAppender {
         location.setType(type);
 
         WriteBatch batch;
-        WriteCommand write = new WriteCommand(location, data, onComplete);
+        WriteCommand write = new WriteCommand(location, data, attachment);
 
         synchronized (this) {
             batch = enqueue(write);
@@ -298,8 +306,6 @@ class DataFileAppender {
                     }
                 }
 
-                WriteCommand write = wb.writes.getHead();
-
                 // Write an empty batch control record.
                 buff.reset();
                 buff.writeInt(Journal.BATCH_CONTROL_RECORD_SIZE);
@@ -309,8 +315,10 @@ class DataFileAppender {
                 buff.writeLong(0);
                 
                 boolean forceToDisk = false;
+
+                WriteCommand write = wb.writes.getHead();
                 while (write != null) {
-                    forceToDisk |= write.sync | write.onComplete != null;
+                    forceToDisk |= write.sync | write.attachment != null;
                     buff.writeInt(write.location.getSize());
                     buff.writeByte(write.location.getType());
                     buff.write(write.data.getData(), write.data.getOffset(), write.data.getLength());
@@ -350,18 +358,20 @@ class DataFileAppender {
                 // cache.
                 write = wb.writes.getHead();
                 while (write != null) {
+                    write.data = null;
                     if (!write.sync) {
                         WriteCommand was = inflightWrites.remove(write.location);
                         assert( was !=null );
                     }
-                    if (write.onComplete != null) {
-                        try {
-                            write.onComplete.success(write.location);
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                        }
-                    }
                     write = write.getNext();
+                }
+
+                if( journal.listener!=null ) {
+                    try {
+                        journal.listener.synced(wb.writes.toArray(new WriteCommand[wb.writes.size()]));
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 // Signal any waiting threads that the write is on disk.
