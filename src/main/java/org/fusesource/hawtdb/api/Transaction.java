@@ -55,5 +55,13 @@ public interface Transaction extends Paged {
      * 
      */
 	void rollback();
+
+    /**
+     * Closes a transaction object.  Throws an assertion error
+     * if the transaction is not already committed or rolledback.
+     *
+     * Attempts to use this transaction again will throw assertion errors.
+     */
+    void close();
 	
 }

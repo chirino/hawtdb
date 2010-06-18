@@ -51,10 +51,12 @@ final class HawtTransaction implements Transaction {
 
     private ConcurrentHashMap<Integer, Update> updates;
     private Snapshot snapshot;
+    private boolean closed;
     
     private final Allocator txallocator = new Allocator() {
         
         public void free(int pageId, int count) {
+            assertOpen();
             // TODO: this is not a very efficient way to handle allocation ranges.
             int end = pageId+count;
             for (int key = pageId; key < end; key++) {
@@ -67,6 +69,7 @@ final class HawtTransaction implements Transaction {
         }
         
         public int alloc(int count) throws OutOfSpaceException {
+            assertOpen();
             int pageId = palloc(count);
             // TODO: this is not a very efficient way to handle allocation ranges.
             int end = pageId+count;
@@ -77,18 +80,22 @@ final class HawtTransaction implements Transaction {
         }
 
         public void unfree(int pageId, int count) {
+            assertOpen();
             throw new UnsupportedOperationException();
         }
         
         public void clear() throws UnsupportedOperationException {
+            assertOpen();
             throw new UnsupportedOperationException();
         }
 
         public int getLimit() {
+            assertOpen();
             return HawtTransaction.this.parent.allocator.getLimit();
         }
 
         public boolean isAllocated(int page) {
+            assertOpen();
             return HawtTransaction.this.parent.allocator.isAllocated(page);
         }
 
@@ -98,7 +105,19 @@ final class HawtTransaction implements Transaction {
 
     };
 
+
+    private void assertOpen() {
+        assert !closed : "The transaction had been closed.";
+    }
+
+    public void close() {
+        assertOpen();
+        assert snapshot==null : "The transaction must be committed or rolled back before it is closed.";
+        closed = true;
+    }
+
     public <T> T get(PagedAccessor<T> marshaller, int page) {
+        assertOpen();
         // Perhaps the page was updated in the current transaction...
         Update update = updates == null ? null : updates.get(page);
         if( update != null ) {
@@ -122,6 +141,7 @@ final class HawtTransaction implements Transaction {
     }
 
     public <T> void put(PagedAccessor<T> marshaller, int page, T value) {
+        assertOpen();
         ConcurrentHashMap<Integer, Update> updates = getUpdates();
         Update update = updates.get(page);
         DeferredUpdate deferred = null;
@@ -146,6 +166,7 @@ final class HawtTransaction implements Transaction {
     }
 
     public <T> void clear(PagedAccessor<T> marshaller, int page) {
+        assertOpen();
         ConcurrentHashMap<Integer, Update> updates = getUpdates();
         Update update = updates.get(page);
         
@@ -166,18 +187,22 @@ final class HawtTransaction implements Transaction {
     }
     
     public Allocator allocator() {
+        assertOpen();
         return txallocator;
     }
     
     public int alloc() {
+        assertOpen();
         return allocator().alloc(1);
     }
 
     public void free(int page) {
+        assertOpen();
         allocator().free(page, 1);
     }
 
     public void read(int page, Buffer buffer) throws IOPagingException {
+        assertOpen();
         // We may need to translate the page due to an update..
         Update update = updates == null ? null : updates.get(page);
         if (update != null && update.shadowed()) {
@@ -191,6 +216,7 @@ final class HawtTransaction implements Transaction {
     }
 
     public ByteBuffer slice(SliceType type, int page, int count) throws IOPagingException {
+        assertOpen();
         //TODO: wish we could do ranged opps more efficiently.
         
         if( type==SliceType.READ ) {
@@ -239,10 +265,12 @@ final class HawtTransaction implements Transaction {
     }
 
     public void unslice(ByteBuffer buffer) {
+        assertOpen();
         parent.pageFile.unslice(buffer);
     }
 
     public void write(int page, Buffer buffer) throws IOPagingException {
+        assertOpen();
         Update update = getUpdates().get(page);
         if (update == null) {
             // We are updating an existing page in the snapshot...
@@ -259,6 +287,7 @@ final class HawtTransaction implements Transaction {
 
 
     public void commit() throws IOPagingException {
+        assertOpen();
         boolean failed = true;
         try {
             if (updates!=null) {
@@ -282,6 +311,7 @@ final class HawtTransaction implements Transaction {
     }
 
     public void rollback() throws IOPagingException {
+        assertOpen();
         try {
             if (updates!=null) {
                 for (Map.Entry<Integer,Update> entry : updates.entrySet()) {
@@ -309,6 +339,7 @@ final class HawtTransaction implements Transaction {
     }
 
     public boolean isReadOnly() {
+        assertOpen();
         return updates == null;
     }
 
@@ -320,6 +351,7 @@ final class HawtTransaction implements Transaction {
     }
 
     public int getPageSize() {
+        assertOpen();
         return parent.pageFile.getPageSize();
     }
 
@@ -333,10 +365,12 @@ final class HawtTransaction implements Transaction {
     }
 
     public int pages(int length) {
+        assertOpen();
         return parent.pageFile.pages(length);
     }
 
     public void flush() {
+        assertOpen();
         parent.flush();
     }
 
