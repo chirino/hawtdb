@@ -358,25 +358,23 @@ public final class HawtTxPageFile implements TxPageFile {
             synchronized (HOUSE_KEEPING_MUTEX) {
                 storeBatches(false);
             }
+
             if( worker!=null ) {
                 worker.execute(new Runnable() {
                     public void run() {
-                        flushBatch();
+                        synchronized (HOUSE_KEEPING_MUTEX) {
+                            syncBatches();
+                        }
                     }
                 });
             } else {
-                flushBatch();
+                synchronized (HOUSE_KEEPING_MUTEX) {
+                    syncBatches();
+                }
             }
         }
     }
 
-    private void flushBatch() {
-        synchronized (HOUSE_KEEPING_MUTEX) {
-            // TODO: do the following actions async.
-            syncBatches();
-        }
-    }
-    
     /**
      * Used to initialize a new file or to clear out the 
      * contents of an existing file.
