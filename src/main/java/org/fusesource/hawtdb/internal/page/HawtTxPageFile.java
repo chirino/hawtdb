@@ -31,10 +31,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -305,8 +302,9 @@ public final class HawtTxPageFile implements TxPageFile {
      * 
      * @param snapshot
      * @param pageUpdates
+     * @param flushCallbacks
      */
-    void commit(Snapshot snapshot, ConcurrentHashMap<Integer, Update> pageUpdates) {
+    void commit(Snapshot snapshot, ConcurrentHashMap<Integer, Update> pageUpdates, ArrayList<Runnable> flushCallbacks) {
         
         boolean fullBatch=false;
         Commit commit=null;
@@ -328,6 +326,11 @@ public final class HawtTxPageFile implements TxPageFile {
                 rev = openBatch.head;
             }
             rev++;
+
+
+            if( flushCallbacks!=null ) {
+                openBatch.flushCallbacks.addAll(flushCallbacks);
+            }
 
             commit = openBatch.commits.getTail();
 
@@ -632,7 +635,22 @@ public final class HawtTxPageFile implements TxPageFile {
 
         // Were there some batches in the stored state?
         if (storingBatches!=openBatch) {
-            
+
+            // Callback the runnables which were waiting for the updates to be
+            // fully flushed to disk.
+            Batch cur = storingBatches;
+            while( cur!=openBatch) {
+                for (Runnable runnable : storingBatches.flushCallbacks) {
+                    try {
+                        runnable.run();
+                    } catch (Throwable e){
+                        e.printStackTrace();
+                    }
+                }
+                cur = cur.getNext();
+            }
+
+
             // The last stored is actually synced now..
             Batch lastStoredBatch = openBatch.getPrevious();
             // Let the header know about it..

@@ -63,5 +63,17 @@ public interface Transaction extends Paged {
      * Attempts to use this transaction again will throw assertion errors.
      */
     void close();
+
+    /**
+     * Committed transactions do not get written to physical media immediately, they get
+     * batched up with other Transaction to increase update throughput.
+     *
+     * Call this method with a Runnable if you want to get a callback when
+     * the transactions' updates are secured to physical media and therefore are known to
+     * survive a machine reboot.
+     *
+     * @param runnable
+     */
+    void onFlush(Runnable runnable);
 	
 }

@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.internal.page;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,6 +51,7 @@ final class HawtTransaction implements Transaction {
     }
 
     private ConcurrentHashMap<Integer, Update> updates;
+    private ArrayList<Runnable> flushCallbacks;
     private Snapshot snapshot;
     private boolean closed;
     
@@ -114,6 +116,13 @@ final class HawtTransaction implements Transaction {
         assertOpen();
         assert snapshot==null : "The transaction must be committed or rolled back before it is closed.";
         closed = true;
+    }
+
+    public void onFlush(Runnable runnable) {
+        if( flushCallbacks ==null ) {
+            flushCallbacks = new ArrayList<Runnable>(1);
+        }
+        flushCallbacks.add(runnable);
     }
 
     public <T> T get(PagedAccessor<T> marshaller, int page) {
@@ -292,7 +301,7 @@ final class HawtTransaction implements Transaction {
         try {
             if (updates!=null) {
                 // If the commit is successful it will release our snapshot..
-                parent.commit(snapshot, updates);
+                parent.commit(snapshot, updates, flushCallbacks);
                 snapshot = null;
             }
             failed = false;
@@ -303,6 +312,7 @@ final class HawtTransaction implements Transaction {
                 rollback();
             }
             updates = null;
+            flushCallbacks = null;
             if( snapshot!=null ) {
                 snapshot.close();
                 snapshot = null;
@@ -328,6 +338,7 @@ final class HawtTransaction implements Transaction {
                 snapshot = null;
             }
             updates = null;
+            flushCallbacks = null;
         }
     }
 

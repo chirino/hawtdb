@@ -62,6 +62,8 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     public long head;
 
     boolean performed;
+
+    ArrayList<Runnable> flushCallbacks = new ArrayList<Runnable>();
     
     public Batch() {
     }
