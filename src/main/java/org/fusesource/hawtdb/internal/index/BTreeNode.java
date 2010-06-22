@@ -265,6 +265,52 @@ public final class BTreeNode<Key, Value> {
         }
     }
 
+
+    /**
+     * Returns the right most leaf from the current btree graph.
+     * @throws IOException
+     */
+    private BTreeNode<Key,Value> getRightLeaf(BTreeIndex<Key, Value> index) {
+        BTreeNode<Key,Value> cur = this;
+        while(cur.isBranch()) {
+            cur = cur.getChild(index, data.keys.length);
+        }
+        return cur;
+    }
+
+    /**
+     * Returns the left most leaf from the current btree graph.
+     * @throws IOException
+     */
+    private BTreeNode<Key,Value> getLeftLeaf(BTreeIndex<Key, Value> index) {
+        BTreeNode<Key,Value> cur = this;
+        while(cur.isBranch()) {
+            cur = cur.getChild(index, 0);
+        }
+        return cur;
+    }
+
+    /**
+     * Returns the left peer of this node.
+     * @throws IOException
+     */
+    private BTreeNode<Key,Value> getLeftPeer(BTreeIndex<Key, Value> index, BTreeNode<Key,Value> x) {
+        BTreeNode<Key,Value> cur = x;
+        while( cur.parent !=null ) {
+            if( cur.parent.data.children[0] == cur.page ) {
+                cur = cur.parent;
+            } else {
+                for( int i=0; i < cur.parent.data.children.length; i ++) {
+                    if( cur.parent.data.children[i]==cur.page ) {
+                        return cur.parent.getChild(index, i-1);
+                    }
+                }
+                throw new AssertionError("page "+x+" was dependent of "+cur.page);
+            }
+        }
+        return null;
+    }
+
     public Value remove(BTreeIndex<Key, Value> index, Key key) {
 
         if (data.isBranch()) {
@@ -289,12 +335,25 @@ public final class BTreeNode<Key, Value> {
                     // The child was a leaf. Then we need to actually remove it
                     // from this branch node..
 
-                    // We need to update the previous child's next pointer to
-                    // skip over the child being removed....
-                    int prevIdx = idx - 1;
-                    if (idx > 0 && data.children.length > 1) {
-                        getChild(index, prevIdx).setNext(index, child.data.next);
+
+                    BTreeNode<Key, Value> previousLeaf = null;
+                    if( idx > 0 ) {
+                        // easy if we this node hold the previous child.
+                        previousLeaf = getChild(index, idx-1).getRightLeaf(index);
+                    } else {
+                        // less easy if we need to go to the parent to find the previous child.
+                        BTreeNode<Key, Value> lp = getLeftPeer(index, this);
+                        if( lp!=null ) {
+                            previousLeaf = lp.getRightLeaf(index);
+                        }
+                        // lp will be null if there was no previous child.
                     }
+
+                    // If there was a previous leaf, link it to the next one.
+                    if( previousLeaf !=null ) {
+                        previousLeaf.setNext(index, child.data.next);
+                    }
+
 
                     if (idx < data.children.length - 1) {
                         // Delete it and key to the right.
@@ -302,7 +361,7 @@ public final class BTreeNode<Key, Value> {
                     } else {
                         // It was the last child.. Then delete it and key to the
                         // left
-                        data = data.branch(arrayDelete(data.keys, prevIdx), arrayDelete(data.children, idx));
+                        data = data.branch(arrayDelete(data.keys, idx-1), arrayDelete(data.children, idx));
                     }
 
                     // If we are the root node, and only have 1 child left. Then
