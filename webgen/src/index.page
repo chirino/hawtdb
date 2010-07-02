@@ -146,18 +146,18 @@ operation or report the failure to the user.
 
 ## Customized Key/Value Encoding
 
-By default the indexes will use standard java object serialization to serialize keys and values.  If you want to provide a customized encoding strategy or if your key or value does not support object serialization, then you can configure key and value marshalers on the index factory objects.
+By default the indexes will use standard java object serialization to serialize keys and values.  If you want to provide a customized encoding strategy or if your key or value does not support object serialization, then you can configure key and value codecs on the index factory objects.
 
-For example, it is much more efficient to use the  [`StringMarshaller`]({api_base:}/util/marshaller/StringMarshaller.html) StringMarshaller when using String values than to standard object serialization:
+For example, it is much more efficient to use the  [`StringCodec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/StringCodec.java) StringCodec when using String values than to standard object serialization:
 
 {pygmentize:: java}
-indexFactory.setKeyMarshaller(StringMarshaller.INSTANCE);
-indexFactory.setValueMarshaller(StringMarshaller.INSTANCE);
+indexFactory.setKeyCodec(StringCodec.INSTANCE);
+indexFactory.setValueCodec(StringCodec.INSTANCE);
 {pygmentize}
 
-You can create custom Marshaller implementations by implementing the [`Marshaller`]({api_base:}/util/marshaller/Marshaller.html) class.
+You can create custom Codec implementations by implementing the [`Codec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/Codec.java) class.
 
-## Object Caching and Object Marshaling Deferring
+## Object Caching and Object Encoding Deferring
 
 If your keys and values are immutable values, then you should enable the deferred encoding option on the index.  This option allows the index to avoid encoding the keys and values when the index operations occur and instead places them on to an internally maintained object cache.  Keys/Values are not encoded 
 until the last possible moment, which is when the index pages are flushed to disk in a batch.  This allows you to avoid some encoding processing if the same key gets updated multiple times.  It also avoid some object decoding as a subsequent get operation can return a cached value instead of having to do a page decode.
