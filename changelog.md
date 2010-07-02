@@ -3,7 +3,7 @@
 
 [logo]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
 
-[HawtDB 1.0][1_1], released 2010-07-01
+[HawtDB 1.1][1_1], released 2010-07-01
 -------------------------------------------
 [1_1]: http://hawtdb.fusesource.org/maven/1.1
 
