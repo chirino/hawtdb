@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.text.NumberFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -187,10 +188,10 @@ public class BTreeIndexTest extends IndexTestSupport {
         // BTree should iterate it in sorted order.
         
         index.visit(new IndexVisitor<String, Long>(){
-            public boolean isInterestedInKeysBetween(String first, String second) {
+            public boolean isInterestedInKeysBetween(String first, String second, Comparator comparator) {
                 return true;
             }
-            public void visit(List<String> keys, List<Long> values) {
+            public void visit(List<String> strings, List<Long> longs, Comparator comparator) {
             }
             public boolean isSatiated() {
                 return false;

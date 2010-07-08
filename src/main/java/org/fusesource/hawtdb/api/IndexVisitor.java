@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.api;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,17 +34,20 @@ public interface IndexVisitor<Key,Value> {
      *
      * @param first if null indicates the range of values before the second key.
      * @param second if null indicates the range of values after the first key.
+     * @param comparator the Comparator configured for the index, may be null.
+     *
      * @return true if you want to visit the values between the first and second key.
      */
-    boolean isInterestedInKeysBetween(Key first, Key second);
+    boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator);
 
     /**
      * The keys and values of an index node.
      *
      * @param keys
+     * @param comparator the Comparator configured for the index, may be null.
      * @param values
      */
-    void visit(List<Key> keys, List<Value> values);
+    void visit(List<Key> keys, List<Value> values, Comparator comparator);
 
     /**
      * @return true if the visitor has quenched it's thirst for more results

@@ -65,7 +65,7 @@ final class BTreePredicateIterator<Key, Value> implements Iterator<Entry<Key, Va
                     if (current.pos != data.children.length - 1) {
                         key2 = data.keys[current.pos];
                     }
-                    if (predicate.isInterestedInKeysBetween(key1, key2)) {
+                    if (predicate.isInterestedInKeysBetween(key1, key2, index.getComparator())) {
                         stack.push( new Data<Key, Value>(node.getChild(index, current.pos)) );
                     }
                     current.pos++;
@@ -74,7 +74,7 @@ final class BTreePredicateIterator<Key, Value> implements Iterator<Entry<Key, Va
                 }
             } else {
                 if (current.pos < data.keys.length) {
-                    if( predicate.isInterestedInKey(data.keys[current.pos]) ) {
+                    if( predicate.isInterestedInKey(data.keys[current.pos], index.getComparator()) ) {
                         nextEntry = new MapEntry<Key, Value>(data.keys[current.pos], data.values[current.pos]);
                     }
                     current.pos++;

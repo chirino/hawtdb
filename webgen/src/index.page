@@ -11,10 +11,13 @@ api_base: http://hawtdb.fusesource.org/maven/1.0/apidocs/org/fusesource/hawtdb
 
 --- name:content pipeline:tags,markdown
 
-## {project_name:}
+# {project_name:}
 
 {project_name:} is a high-performance key/value embedded database for Java
 applications.
+
+* Table of contents
+{:toc}
 
 ### Features
 
@@ -156,6 +159,53 @@ indexFactory.setValueCodec(StringCodec.INSTANCE);
 {pygmentize}
 
 You can create custom Codec implementations by implementing the [`Codec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/Codec.java) class.
+
+## Custom Comparators
+
+If your keys do not implement the Comparable interface, or if you want to
+sort the key different from their natural sort order, then you can configure
+a Comparator instance on the index factory.  For example, to do a case 
+insensitive sorting of the string keys you would:
+
+{pygmentize:: java}
+indexFactory.setComparator(new Comparator<String>(){
+    public int compare(String o1, String o2) {
+        return o1.compareToIgnoreCase(o2);
+    }
+};);
+{pygmentize}
+
+## Iterating Sorted Indexes
+
+Sorted indexes can be sequentially iterated using the enhanced for loop since
+they implement the Iterable interface.  For example:
+
+{pygmentize:: java}
+for(Map.Entry<Key, Value> entry: index) {
+  System.out.println(entry.getKey()+" = "+entry.getValue());
+}
+{pygmentize}
+
+Typically that's not used since folks are usually only interested in a subset
+of the keys. It is more efficient if a predicate based iterator is used.
+Predicates help cut down the number of BTree nodes that need to be accessed.
+Example:
+
+{pygmentize:: java}
+import org.fusesource.hawtdb.api.Predicates.*;
+...
+Predicate<Long> p = and(gt(new Long(12)), lt(new Long(450))
+Iterator<Map.Entry<Key, Value>> i = index.iterator(p);
+while( i.hasNext() ) {
+  Map.Entry<Key, Value> entry = i.next();
+  System.out.println(entry.getKey()+" = "+entry.getValue());
+}
+{pygmentize}
+
+The example above is using the static methods in the Predicates class to 
+help build a complex predicate expression.  You are free to implement
+the Predicate interface to create more complex predicates.
+
 
 ## Object Caching and Object Encoding Deferring
 

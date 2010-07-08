@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.api;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -39,18 +40,18 @@ final public class Predicates {
             this.conditions = conditions;
         }
 
-        final public boolean isInterestedInKeysBetween(Key first, Key second) {
+        final public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
             for (Predicate<Key> condition : conditions) {
-                if( condition.isInterestedInKeysBetween(first, second) ) {
+                if( condition.isInterestedInKeysBetween(first, second, comparator) ) {
                     return true;
                 }
             }
             return false;
         }
 
-        final public boolean isInterestedInKey(Key key) {
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
             for (Predicate<Key> condition : conditions) {
-                if( condition.isInterestedInKey(key) ) {
+                if( condition.isInterestedInKey(key, comparator) ) {
                     return true;
                 }
             }
@@ -77,7 +78,7 @@ final public class Predicates {
     /**
      * Implements a logical AND predicate over a list of predicate expressions.
      *
-     * @param <Key>
+     * @param <Key> 
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     static class AndPredicate<Key> implements Predicate<Key> {
@@ -87,18 +88,18 @@ final public class Predicates {
             this.conditions = conditions;
         }
 
-        final public boolean isInterestedInKeysBetween(Key first, Key second) {
+        final public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
             for (Predicate<Key> condition : conditions) {
-                if( !condition.isInterestedInKeysBetween(first, second) ) {
+                if( !condition.isInterestedInKeysBetween(first, second, comparator) ) {
                     return false;
                 }
             }
             return true;
         }
 
-        final public boolean isInterestedInKey(Key key) {
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
             for (Predicate<Key> condition : conditions) {
-                if( !condition.isInterestedInKey(key) ) {
+                if( !condition.isInterestedInKey(key, comparator) ) {
                     return false;
                 }
             }
@@ -122,16 +123,28 @@ final public class Predicates {
         }
     }
 
+    abstract static class ComparingPredicate<Key> implements Predicate<Key> {
+
+        final public int compare(Key key, Key value, Comparator comparator) {
+            if( comparator==null ) {
+                return ((Comparable)key).compareTo(value);
+            } else {
+                return comparator.compare(key, value);
+            }
+        }
+
+    }
+
     /**
      * Implements a BETWEEN predicate between two key values.  It matches inclusive on
      * the first value and exclusive on the last value.  The predicate expression is
      * equivalent to: <code>(first <= x) AND (x < last)</code>
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     @SuppressWarnings({"unchecked"})
-    static class BetweenPredicate<Key extends Comparable> implements Predicate<Key> {
+    static class BetweenPredicate<Key> extends ComparingPredicate<Key> {
         private final Key first;
         private final Key last;
 
@@ -140,13 +153,13 @@ final public class Predicates {
             this.last = last;
         }
 
-        final public boolean isInterestedInKeysBetween(Key left, Key right) {
-            return (right==null || right.compareTo(first)>=0)
-                    && (left==null || left.compareTo(last)<0);
+        final public boolean isInterestedInKeysBetween(Key left, Key right, Comparator comparator) {
+            return (right==null || compare(right, first, comparator)>=0)
+                    && (left==null || compare(left, last, comparator)<0);
         }
 
-        final public boolean isInterestedInKey(Key key) {
-            return key.compareTo(first) >=0 && key.compareTo(last) <0;
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
+            return compare(key, first, comparator) >=0 && compare(key, last, comparator) <0;
         }
 
         @Override
@@ -159,23 +172,23 @@ final public class Predicates {
      * Implements a greater than predicate.  The predicate expression is
      * equivalent to: <code>x > value</code>
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     @SuppressWarnings({"unchecked"})
-    static class GTPredicate<Key extends Comparable> implements Predicate<Key> {
+    static class GTPredicate<Key> extends ComparingPredicate<Key> {
         final private Key value;
 
         public GTPredicate(Key value) {
             this.value = value;
         }
 
-        final public boolean isInterestedInKeysBetween(Key first, Key second) {
-            return second==null || isInterestedInKey(second);
+        final public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
+            return second==null || isInterestedInKey(second, comparator);
         }
 
-        final public boolean isInterestedInKey(Key key) {
-            return key.compareTo(value)>0;
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
+            return compare(key, value, comparator) > 0;
         }
 
         @Override
@@ -188,23 +201,23 @@ final public class Predicates {
      * Implements a greater than or equal to predicate.  The predicate expression is
      * equivalent to: <code>x >= value</code>
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     @SuppressWarnings({"unchecked"})
-    static class GTEPredicate<Key extends Comparable> implements Predicate<Key> {
+    static class GTEPredicate<Key> extends ComparingPredicate<Key> {
         final private Key value;
 
         public GTEPredicate(Key value) {
             this.value = value;
         }
 
-        final public boolean isInterestedInKeysBetween(Key first, Key second) {
-            return second==null || isInterestedInKey(second);
+        final public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
+            return second==null || isInterestedInKey(second, comparator);
         }
 
-        final public boolean isInterestedInKey(Key key) {
-            return key.compareTo(value)>=0;
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
+            return compare(key, value, comparator)>=0;
         }
 
         @Override
@@ -217,23 +230,23 @@ final public class Predicates {
      * Implements a less than predicate.  The predicate expression is
      * equivalent to: <code>x < value</code>
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     @SuppressWarnings({"unchecked"})
-    static class LTPredicate<Key extends Comparable> implements Predicate<Key> {
+    static class LTPredicate<Key> extends ComparingPredicate<Key> {
         final private Key value;
 
         public LTPredicate(Key value) {
             this.value = value;
         }
 
-        final public boolean isInterestedInKeysBetween(Key first, Key second) {
-            return first==null || isInterestedInKey(first);
+        final public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
+            return first==null || isInterestedInKey(first, comparator);
         }
 
-        final public boolean isInterestedInKey(Key key) {
-            return key.compareTo(value)<0;
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
+            return compare(key, value, comparator)<0;
         }
 
         @Override
@@ -246,23 +259,23 @@ final public class Predicates {
      * Implements a less than or equal to predicate.  The predicate expression is
      * equivalent to: <code>x <= value</code>.
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     @SuppressWarnings({"unchecked"})
-    static class LTEPredicate<Key extends Comparable> implements Predicate<Key> {
+    static class LTEPredicate<Key> extends ComparingPredicate<Key> {
         final private Key value;
 
         public LTEPredicate(Key value) {
             this.value = value;
         }
 
-        final public boolean isInterestedInKeysBetween(Key first, Key second) {
-            return first==null || isInterestedInKey(first);
+        final public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
+            return first==null || isInterestedInKey(first, comparator);
         }
 
-        final public boolean isInterestedInKey(Key key) {
-            return key.compareTo(value)<=0;
+        final public boolean isInterestedInKey(Key key, Comparator comparator) {
+            return compare(key, value, comparator)<=0;
         }
 
         @Override
@@ -271,17 +284,18 @@ final public class Predicates {
         }
     }
 
+
     /**
      * Implements a predicate that matches all entries.
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     final static class AllPredicate<Key> implements Predicate<Key> {
-        public boolean isInterestedInKeysBetween(Key first, Key second) {
+        public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
             return true;
         }
-        public boolean isInterestedInKey(Key key) {
+        public boolean isInterestedInKey(Key key, Comparator comparator) {
             return true;
         }
         @Override
@@ -293,14 +307,14 @@ final public class Predicates {
     /**
      * Implements a predicate that matches no entries.
      *
-     * @param <Key> a Comparable class
+     * @param <Key> the class being compared
      * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
      */
     final static class NonePredicate<Key> implements Predicate<Key> {
-        public boolean isInterestedInKeysBetween(Key first, Key second) {
+        public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
             return false;
         }
-        public boolean isInterestedInKey(Key key) {
+        public boolean isInterestedInKey(Key key, Comparator comparator) {
             return false;
         }
         @Override
@@ -335,21 +349,21 @@ final public class Predicates {
         return new AndPredicate<Key>(conditions);
     }
 
-    public static <Key extends Comparable> Predicate<Key> gt(Key key) {
+    public static <Key> Predicate<Key> gt(Key key) {
         return new GTPredicate<Key>(key);
     }
-    public static <Key extends Comparable> Predicate<Key> gte(Key key) {
+    public static <Key> Predicate<Key> gte(Key key) {
         return new GTEPredicate<Key>(key);
     }
 
-    public static <Key extends Comparable> Predicate<Key> lt(Key key) {
+    public static <Key> Predicate<Key> lt(Key key) {
         return new LTPredicate<Key>(key);
     }
-    public static <Key extends Comparable> Predicate<Key> lte(Key key) {
+    public static <Key> Predicate<Key> lte(Key key) {
         return new LTEPredicate<Key>(key);
     }
 
-    public static <Key extends Comparable> Predicate<Key> lte(Key first, Key last) {
+    public static <Key> Predicate<Key> lte(Key first, Key last) {
         return new BetweenPredicate<Key>(first, last);
     }
 
@@ -375,10 +389,10 @@ final public class Predicates {
             this.limit = limit;
         }
 
-        final public void visit(List<Key> keys, List<Value> values) {
+        final public void visit(List<Key> keys, List<Value> values, Comparator comparator) {
             for( int i=0; i < keys.size() && !isSatiated(); i++) {
                 Key key = keys.get(i);
-                if( predicate.isInterestedInKey(key) ) {
+                if( predicate.isInterestedInKey(key, comparator) ) {
                     if(limit > 0 )
                         limit--;
                     matched(key, values.get(i));
@@ -386,8 +400,8 @@ final public class Predicates {
             }
         }
 
-        public boolean isInterestedInKeysBetween(Key first, Key second) {
-            return predicate.isInterestedInKeysBetween(first, second);
+        public boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator) {
+            return predicate.isInterestedInKeysBetween(first, second, comparator);
         }
 
         public boolean isSatiated() {

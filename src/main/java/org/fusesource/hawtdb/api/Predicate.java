@@ -16,6 +16,7 @@
  */
 package org.fusesource.hawtdb.api;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -34,14 +35,18 @@ public interface Predicate<Key> {
      * 
      * @param first the first key in the range or null if unknown
      * @param second the last key in the range or null if unknown
+     * @param comparator the Comparator configured for the index, may be null.
+     *
      * @return true if the predicate is interested in keys in the range.
      */
-    boolean isInterestedInKeysBetween(Key first, Key second);
+    boolean isInterestedInKeysBetween(Key first, Key second, Comparator comparator);
     
     /**
      * @param key
+     * @param comparator the Comparator configured for the index, may be null.
+     *
      * @return true if the predicate is interested in the key
      */
-    boolean isInterestedInKey(Key key);
+    boolean isInterestedInKey(Key key, Comparator comparator);
     
 }

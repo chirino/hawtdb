@@ -655,13 +655,13 @@ public final class BTreeNode<Key, Value> {
                 if (i != this.data.children.length - 1) {
                     key2 = data.keys[i];
                 }
-                if (visitor.isInterestedInKeysBetween(key1, key2)) {
+                if (visitor.isInterestedInKeysBetween(key1, key2, index.getComparator())) {
                     BTreeNode<Key, Value> child = getChild(index, i);
                     child.visit(index, visitor);
                 }
             }
         } else {
-            visitor.visit(Arrays.asList(data.keys), Arrays.asList(data.values));
+            visitor.visit(Arrays.asList(data.keys), Arrays.asList(data.values), index.getComparator());
         }
     }
 
