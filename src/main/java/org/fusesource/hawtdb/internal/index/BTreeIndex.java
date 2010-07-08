@@ -19,6 +19,7 @@ package org.fusesource.hawtdb.internal.index;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,8 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
     private final Codec<Value> valueCodec;
     private final Prefixer<Key> prefixer;
     private final boolean deferredEncoding;
-    
+    private final Comparator comparator;
+
     public BTreeIndex(Paged paged, int page, BTreeIndexFactory<Key, Value> factory) {
         this.paged = paged;
         this.page = page;
@@ -56,6 +58,7 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         this.valueCodec = factory.getValueCodec();
         this.deferredEncoding = factory.isDeferredEncoding();
         this.prefixer = factory.getPrefixer();
+        this.comparator = factory.getComparator();
     }
     
     @Override
@@ -274,9 +277,14 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         return prefixer;
     }
 
+    public Comparator getComparator() {
+        return comparator;
+    }
+
     public void destroy() {
         clear();
         paged.free(page);
     }
+
 
 }

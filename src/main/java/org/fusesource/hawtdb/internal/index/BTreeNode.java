@@ -314,7 +314,7 @@ public final class BTreeNode<Key, Value> {
     public Value remove(BTreeIndex<Key, Value> index, Key key) {
 
         if (data.isBranch()) {
-            int idx = Arrays.binarySearch(data.keys, key);
+            int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
             idx = idx < 0 ? -(idx + 1) : idx + 1;
             BTreeNode<Key, Value> child = getChild(index, idx);
             if (child.getPage() == index.getPage()) {
@@ -379,7 +379,7 @@ public final class BTreeNode<Key, Value> {
 
             return rc;
         } else {
-            int idx = Arrays.binarySearch(data.keys, key);
+            int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
             if (idx < 0) {
                 return null;
             } else {
@@ -410,7 +410,7 @@ public final class BTreeNode<Key, Value> {
         if (data.isBranch()) {
             return getLeafNode(index, this, key).put(index, key, value);
         } else {
-            int idx = Arrays.binarySearch(data.keys, key);
+            int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
 
             Value oldValue = null;
             if (idx >= 0) {
@@ -437,7 +437,7 @@ public final class BTreeNode<Key, Value> {
 
     private void promoteValue(BTreeIndex<Key, Value> index, Key key, int nodeId) {
 
-        int idx = Arrays.binarySearch(data.keys, key);
+        int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
         idx = idx < 0 ? -(idx + 1) : idx + 1;
         data = data.branch(arrayInsert(data.keys, key, idx), arrayInsert(data.children, nodeId, idx + 1));
 
@@ -627,7 +627,7 @@ public final class BTreeNode<Key, Value> {
         if (data.isBranch()) {
             return getLeafNode(index, this, key).get(index, key);
         } else {
-            int idx = Arrays.binarySearch(data.keys, key);
+            int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
             if (idx < 0) {
                 return null;
             } else {
@@ -711,7 +711,7 @@ public final class BTreeNode<Key, Value> {
         if (data.isBranch()) {
             return getLeafNode(index, this, startKey).iterator(index, startKey);
         } else {
-            int idx = Arrays.binarySearch(data.keys, startKey);
+            int idx = Arrays.binarySearch(data.keys, startKey, index.getComparator());
             if (idx < 0) {
                 idx = -(idx + 1);
             }
@@ -743,7 +743,7 @@ public final class BTreeNode<Key, Value> {
         BTreeNode<Key, Value> current = node;
         while (true) {
             if (current.data.isBranch()) {
-                int idx = Arrays.binarySearch(current.data.keys, key);
+                int idx = Arrays.binarySearch(current.data.keys, key, index.getComparator());
                 idx = idx < 0 ? -(idx + 1) : idx + 1;
                 BTreeNode<Key, Value> child = current.getChild(index, idx);
 
@@ -768,7 +768,7 @@ public final class BTreeNode<Key, Value> {
         if (data.isBranch()) {
             return getLeafNode(index, this, key).contains(index, key);
         } else {
-            int idx = Arrays.binarySearch(data.keys, key);
+            int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
             if (idx < 0) {
                 return false;
             } else {

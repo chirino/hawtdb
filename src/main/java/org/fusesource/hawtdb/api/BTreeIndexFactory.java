@@ -20,6 +20,8 @@ import org.fusesource.hawtbuf.codec.Codec;
 import org.fusesource.hawtdb.internal.index.BTreeIndex;
 import org.fusesource.hawtbuf.codec.ObjectCodec;
 
+import java.util.Comparator;
+
 /**
  * This object is used to create variable magnitude b+tree indexes. 
  * 
@@ -51,6 +53,7 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     private Codec<Value> valueCodec = new ObjectCodec<Value>();
     private boolean deferredEncoding=true;
     private Prefixer<Key> prefixer;
+    private Comparator comparator = null;
 
     /**
      * Creates a new BTree index on the Paged object at the given page location.
@@ -144,5 +147,25 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     public void setPrefixer(Prefixer<Key> prefixer) {
         this.prefixer = prefixer;
     }
-    
+
+    /**
+     * Gets the custom configured Comparator used to sort the keys
+     * in the index.  Defaults to null.
+     * 
+     * @return
+     */
+    public Comparator getComparator() {
+        return comparator;
+    }
+
+    /**
+     * Configures a custom Comparator used to sort the keys
+     * in the index.  If not set, the keys must implement the
+     * {@link Comparable} interface.
+     *
+     * @param comparator
+     */
+    public void setComparator(Comparator comparator) {
+        this.comparator = comparator;
+    }
 }
