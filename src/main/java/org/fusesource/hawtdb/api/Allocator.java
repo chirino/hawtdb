@@ -66,5 +66,10 @@ public interface Allocator {
     /**
      * 
      */
-    public void copy(Ranges freeList);
+    public void setFreeRanges(Ranges freeList);
+
+    /**
+     *
+     */
+    public Ranges getFreeRanges();
 }

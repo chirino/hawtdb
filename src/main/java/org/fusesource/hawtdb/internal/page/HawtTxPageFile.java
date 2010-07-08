@@ -432,7 +432,7 @@ public final class HawtTxPageFile implements TxPageFile {
             if( header.free_list_page >= 0 ) {
                 storedFreeList = loadObject(header.free_list_page);
                 trace("loaded free page list: %s ", storedFreeList);
-                allocator.copy(storedFreeList);
+                allocator.setFreeRanges(storedFreeList);
                 Extent.unfree(pageFile, header.free_list_page);
             } else {
                 allocator.clear(); 

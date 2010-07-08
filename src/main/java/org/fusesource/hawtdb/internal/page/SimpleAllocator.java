@@ -84,7 +84,7 @@ public class SimpleAllocator implements Allocator {
         freeRanges.add(0, limit);
     }
 
-    synchronized public void copy(Ranges freePages) throws UnsupportedOperationException {
+    synchronized public void setFreeRanges(Ranges freePages) throws UnsupportedOperationException {
         freeRanges.copy(freePages);
     }
     

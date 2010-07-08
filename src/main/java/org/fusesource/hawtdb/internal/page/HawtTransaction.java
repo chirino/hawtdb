@@ -101,7 +101,11 @@ final class HawtTransaction implements Transaction {
             return HawtTransaction.this.parent.allocator.isAllocated(page);
         }
 
-        public void copy(Ranges freeList) {
+        public void setFreeRanges(Ranges freeList) {
+            throw new UnsupportedOperationException();
+        }
+
+        public Ranges getFreeRanges() {
             throw new UnsupportedOperationException();
         }
 
