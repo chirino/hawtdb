@@ -35,9 +35,15 @@ public interface IndexFactory<Key, Value> {
     /**
      * 
      * @param paged
-     * @param page
+     * @param indexNumber
      * @return
      */
     public Index<Key, Value> open(Paged paged, int indexNumber);
-    
+
+    /**
+     *
+     * @param paged
+     * @return
+     */
+    public Index<Key, Value> open(Paged paged);
 }

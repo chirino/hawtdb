@@ -65,6 +65,13 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     }
 
     /**
+     * Loads an existing hash index from the paged object.
+     */
+    public Index<Key, Value> open(Paged paged) {
+        return createInstance(paged, 0).open();
+    }
+
+    /**
      * Creates a new hash index on the Paged object.
      */
     public Index<Key, Value> create(Paged paged) {

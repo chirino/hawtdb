@@ -76,6 +76,6 @@ public interface Index<Key,Value> {
     
     boolean isEmpty();
     
-    int getPage();
+    int getIndexNumber();
 
 }

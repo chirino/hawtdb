@@ -76,9 +76,9 @@ public class BTreeCacheTest {
 
         Transaction tx = pf.tx();
         SortedIndex<Long, Long> index1 = factory.create(tx);
-        final int page1 = index1.getPage();
+        final int page1 = index1.getIndexNumber();
         SortedIndex<Long, Long> index2 = factory.create(tx);
-        final int page2 = index2.getPage();
+        final int page2 = index2.getIndexNumber();
         tx.commit();
 
         final AtomicLong current = new AtomicLong(-1);

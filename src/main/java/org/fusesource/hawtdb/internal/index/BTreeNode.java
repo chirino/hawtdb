@@ -317,7 +317,7 @@ public final class BTreeNode<Key, Value> {
             int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
             idx = idx < 0 ? -(idx + 1) : idx + 1;
             BTreeNode<Key, Value> child = getChild(index, idx);
-            if (child.getPage() == index.getPage()) {
+            if (child.getPage() == index.getIndexNumber()) {
                 throw new IndexException("BTree corrupted: Cylce detected.");
             }
             Value rc = child.remove(index, key);
