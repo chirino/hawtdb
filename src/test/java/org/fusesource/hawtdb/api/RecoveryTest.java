@@ -75,8 +75,8 @@ public class RecoveryTest {
 
         // Create the root index at the root page.
         Transaction tx = pf.tx();
-        assertEquals(0, tx.alloc());
-        SortedIndex<Long, String> root = ROOT_FACTORY.create(tx, 0);
+        SortedIndex<Long, String> root = ROOT_FACTORY.create(tx);
+        assertEquals(0, root.getPage());
         tx.commit();
         pf.flush();
 

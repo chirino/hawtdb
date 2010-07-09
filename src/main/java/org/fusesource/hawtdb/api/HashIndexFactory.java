@@ -58,17 +58,17 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     private boolean deferredEncoding=true;
 
     /**
-     * Loads an existing hash index from the paged object at the given page location.
+     * Loads an existing hash index from the paged object.
      */
-    public Index<Key, Value> open(Paged paged, int page) {
-        return createInstance(paged, page).open();
+    public Index<Key, Value> open(Paged paged, int indexNumber) {
+        return createInstance(paged, indexNumber).open();
     }
 
     /**
-     * Creates a new hash index on the Paged object at the given page location.
+     * Creates a new hash index on the Paged object.
      */
-    public Index<Key, Value> create(Paged paged, int page) {
-        return createInstance(paged, page).create();
+    public Index<Key, Value> create(Paged paged) {
+        return createInstance(paged, paged.alloc()).create();
     }
 
     private HashIndex<Key, Value> createInstance(Paged paged, int page) {

@@ -75,10 +75,10 @@ public class BTreeCacheTest {
     public void testIndexOperations() throws Exception {
 
         Transaction tx = pf.tx();
-        final int page1 = tx.alloc();
-        SortedIndex<Long, Long> index1 = factory.create(tx, page1);
-        final int page2 = tx.alloc();
-        SortedIndex<Long, Long> index2 = factory.create(tx, page2);
+        SortedIndex<Long, Long> index1 = factory.create(tx);
+        final int page1 = index1.getPage();
+        SortedIndex<Long, Long> index2 = factory.create(tx);
+        final int page2 = index2.getPage();
         tx.commit();
 
         final AtomicLong current = new AtomicLong(-1);

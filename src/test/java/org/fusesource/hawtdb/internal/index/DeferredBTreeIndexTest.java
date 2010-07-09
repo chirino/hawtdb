@@ -34,7 +34,7 @@ public class DeferredBTreeIndexTest extends BTreeIndexTest {
         factory.setValueCodec(LongCodec.INSTANCE);
         factory.setDeferredEncoding(true);
         if( page==-1 ) {
-            return factory.create(tx, tx.allocator().alloc(1));
+            return factory.create(tx);
         } else {
             return factory.open(tx, page);
         }

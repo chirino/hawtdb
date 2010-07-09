@@ -30,7 +30,7 @@ public interface IndexFactory<Key, Value> {
      * @param page
      * @return
      */
-    public Index<Key, Value> create(Paged paged, int page);
+    public Index<Key, Value> create(Paged paged);
     
     /**
      * 
@@ -38,6 +38,6 @@ public interface IndexFactory<Key, Value> {
      * @param page
      * @return
      */
-    public Index<Key, Value> open(Paged paged, int page);
+    public Index<Key, Value> open(Paged paged, int indexNumber);
     
 }

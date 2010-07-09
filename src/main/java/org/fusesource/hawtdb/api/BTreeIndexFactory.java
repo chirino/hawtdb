@@ -56,10 +56,10 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     private Comparator comparator = null;
 
     /**
-     * Creates a new BTree index on the Paged object at the given page location.
+     * Creates a new BTree index on the Paged object.
      */
-    public SortedIndex<Key, Value> create(Paged paged, int page) {
-        BTreeIndex<Key, Value> index = createInstance(paged, page);
+    public SortedIndex<Key, Value> create(Paged paged) {
+        BTreeIndex<Key, Value> index = createInstance(paged, paged.alloc());
         index.create();
         return index;
     }
@@ -70,10 +70,10 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     }
     
     /**
-     * Loads an existing BTree index from the paged object at the given page location.
+     * Loads an existing BTree index from the paged object.
      */
-    public SortedIndex<Key, Value> open(Paged paged, int page) {
-        return createInstance(paged, page);
+    public SortedIndex<Key, Value> open(Paged paged, int indexNumber) {
+        return createInstance(paged, indexNumber);
     }
 
     private BTreeIndex<Key, Value> createInstance(Paged paged, int page) {

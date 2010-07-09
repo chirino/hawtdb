@@ -39,7 +39,7 @@ public class HashIndexBenchmark extends IndexBenchmark {
         factory.setKeyCodec(LongCodec.INSTANCE);
         factory.setValueCodec(new FixedBufferCodec(DATA.length));
         factory.setFixedCapacity(500);
-        return factory.create(tx, tx.allocator().alloc(1));
+        return factory.create(tx);
     }
     
 }

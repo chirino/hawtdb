@@ -37,7 +37,7 @@ public class BTreeIndexBenchmark extends IndexBenchmark {
         BTreeIndexFactory<Long, Buffer> factory = new BTreeIndexFactory<Long, Buffer>();
         factory.setKeyCodec(LongCodec.INSTANCE);
         factory.setValueCodec(new FixedBufferCodec(DATA.length));
-        return factory.create(tx, tx.allocator().alloc(1));
+        return factory.create(tx);
     }
 
    

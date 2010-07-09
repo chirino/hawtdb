@@ -56,7 +56,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         factory.setValueCodec(LongCodec.INSTANCE);
         factory.setDeferredEncoding(false);
         if( page==-1 ) {
-            return factory.create(tx, tx.allocator().alloc(1));
+            return factory.create(tx);
         } else {
             return factory.open(tx, page);
         }
