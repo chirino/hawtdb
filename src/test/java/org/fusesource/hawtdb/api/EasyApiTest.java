@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 public class EasyApiTest {
 
     @Test
-    public void testSingleIndexe() throws IOException {
+    public void testSingleIndex() throws IOException {
         File tmpFile = File.createTempFile("hawtdb", "test");
 
         // Create:
