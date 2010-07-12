@@ -159,7 +159,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         paged.free(page);
     }
 
-    public int getIndexNumber() {
+    public int getIndexLocation() {
         return page;
     }
 
@@ -181,7 +181,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
                 Value value = entry.getValue();
                 Index<Key, Value> bucket = next.bucket(key);
                 bucket.put(key, value);
-                if( activeBuckets.add(bucket.getIndexNumber()) ) {
+                if( activeBuckets.add(bucket.getIndexLocation()) ) {
                     next.active++;
                 }
             }
@@ -247,7 +247,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             this.capacity = capacity;
             this.bucketsIndex = new int[capacity];
             for (int i = 0; i < capacity; i++) {
-                this.bucketsIndex[i] = index.BIN_FACTORY.create(index.paged).getIndexNumber();
+                this.bucketsIndex[i] = index.BIN_FACTORY.create(index.paged).getIndexLocation();
             }
             calcThresholds();
         }

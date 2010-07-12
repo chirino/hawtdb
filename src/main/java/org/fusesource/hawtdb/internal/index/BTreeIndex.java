@@ -261,7 +261,7 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         return paged;
     }
 
-    public int getIndexNumber() {
+    public int getIndexLocation() {
         return page;
     }
 

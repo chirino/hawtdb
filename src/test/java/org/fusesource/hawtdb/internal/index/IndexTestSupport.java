@@ -73,7 +73,7 @@ public abstract class IndexTestSupport {
     }
 
     protected void reloadAll() {
-        int page = index.getIndexNumber();
+        int page = index.getIndexLocation();
         pff.close();
         pff.open();
         pf = pff.getTxPageFile();
@@ -82,7 +82,7 @@ public abstract class IndexTestSupport {
     }
     
     protected void reloadIndex() {
-        int page = index.getIndexNumber();
+        int page = index.getIndexLocation();
         tx.commit();
         index = createIndex(page);
     }

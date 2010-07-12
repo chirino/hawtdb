@@ -75,7 +75,10 @@ public interface Index<Key,Value> {
     int size();
     
     boolean isEmpty();
-    
-    int getIndexNumber();
+
+    /**
+     * @return the location where index root resides on the page file.
+     */
+    int getIndexLocation();
 
 }

@@ -95,11 +95,11 @@ public class EasyApiTest {
         });
 
         SortedIndex<String, String> index1 = indexFactory.create(page);
-        int indexNumber1 = index1.getIndexNumber();
+        int indexNumber1 = index1.getIndexLocation();
         index1.put("3", "");
         index1.put("4", "");
         SortedIndex<String, String> index2 = indexFactory.create(page);
-        int indexNumber2 = index2.getIndexNumber();
+        int indexNumber2 = index2.getIndexLocation();
         index2.put("2", "");
         index2.put("8", "");
 
