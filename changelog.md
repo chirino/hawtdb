@@ -3,6 +3,17 @@
 
 [logo]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
 
+[HawtDB 1.2][1_2], un-released
+-------------------------------------------
+[1_2]: http://hawtdb.fusesource.org/maven/1.2
+
+* Upgrade to hawtbuf 1.1, allows us to test if the codec can estimate serialized size of key/values. if it can't deferred encoding/decoding is disabled.
+* Index getPage method renamed to getIndexLocation
+* Improved IndexFactory APIs: create and open methods default to using the root page. 
+* added a setFreeRanges and getFreeRanges to the allocator interface.
+* Updated the predicates and vistor interfaces so that they are passed the Comparator configured on the index.  see #6 Documented custom comparators and also index iteration
+* Fixes #6 Allow configuring a custom comparators on BTree indexes
+
 [HawtDB 1.1][1_1], released 2010-07-01
 -------------------------------------------
 [1_1]: http://hawtdb.fusesource.org/maven/1.1
