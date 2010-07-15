@@ -57,6 +57,10 @@ public class LocationCodec implements Codec<Location> {
         return true;
     }
 
+    public boolean isEstimatedSizeSupported() {
+        return true;
+    }
+
     public int estimatedSize(Location object) {
         return VarIntegerCodec.INSTANCE.estimatedSize(object.getDataFileId()) +
                VarIntegerCodec.INSTANCE.estimatedSize(object.getOffset());

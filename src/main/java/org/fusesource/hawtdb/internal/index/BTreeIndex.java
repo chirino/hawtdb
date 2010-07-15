@@ -56,7 +56,12 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         this.page = page;
         this.keyCodec = factory.getKeyCodec();
         this.valueCodec = factory.getValueCodec();
-        this.deferredEncoding = factory.isDeferredEncoding();
+
+        // Deferred encoding can only done if the keys and value sizes can be computed.
+        this.deferredEncoding = factory.isDeferredEncoding() &&
+                ( keyCodec.isEstimatedSizeSupported() || keyCodec.getFixedSize()>=0 ) &&
+                ( valueCodec.isEstimatedSizeSupported() || valueCodec.getFixedSize()>=0 );
+
         this.prefixer = factory.getPrefixer();
         this.comparator = factory.getComparator();
     }
@@ -170,6 +175,7 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
      * @return false if page overflow occurred
      */
     boolean storeNode(BTreeNode<Key, Value> node) {
+        System.out.println("Storing page: "+node.getPage()+", keys: "+node.data.keys.length);
         if (deferredEncoding) {
             int size = BTreeNode.estimatedSize(this, node.data);
             size += 9; // The extent header.

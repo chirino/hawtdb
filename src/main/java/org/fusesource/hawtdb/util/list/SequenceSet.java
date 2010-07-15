@@ -86,6 +86,10 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
             return true;
         }
 
+        public boolean isEstimatedSizeSupported() {
+            return true;
+        }
+
         public int estimatedSize(SequenceSet object) {
             return object.size()*16;
         }
