@@ -175,7 +175,6 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
      * @return false if page overflow occurred
      */
     boolean storeNode(BTreeNode<Key, Value> node) {
-        System.out.println("Storing page: "+node.getPage()+", keys: "+node.data.keys.length);
         if (deferredEncoding) {
             int size = BTreeNode.estimatedSize(this, node.data);
             size += 9; // The extent header.

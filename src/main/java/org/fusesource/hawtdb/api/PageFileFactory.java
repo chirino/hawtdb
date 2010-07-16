@@ -33,7 +33,7 @@ public class PageFileFactory {
     private HawtPageFile pageFile;
 
     protected int headerSize = 0;
-    protected short pageSize = 1024 * 4;
+    protected short pageSize = 512;
     protected int maxPages = Integer.MAX_VALUE;
 
     public PageFile getPageFile() {
