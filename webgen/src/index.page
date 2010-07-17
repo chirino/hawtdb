@@ -97,9 +97,7 @@ BTreeIndexFactory<String, String> indexFactory =
     new BTreeIndexFactory<String, String>();
 
 Transaction tx = pageFile.tx();
-int page = tx.alloc(); 
-assert page==0;
-Index<String, String> root = indexFactory.create(tx, page);
+Index<String, String> root = indexFactory.create(tx);
 tx.commit();
 {pygmentize}
 
@@ -108,9 +106,7 @@ Hash Index Non-Transactional Example:
 HashIndexFactory<String, String> indexFactory = 
     new HashIndexFactory<String, String>();
 
-int page = pageFile.alloc(); 
-assert page==0;
-Index<String, String> root = indexFactory.create(pageFile, page);
+Index<String, String> root = indexFactory.create(pageFile);
 {pygmentize}
 
 ### Accessing Index Data
@@ -118,7 +114,7 @@ Index<String, String> root = indexFactory.create(pageFile, page);
 Storing data in an index:
 {pygmentize:: java}
 Transaction tx = pageFile.tx();
-Index<String, String> root = indexFactory.open(tx, 0);
+Index<String, String> root = indexFactory.open(tx);
 root.put("Key:1", "Hello World");
 tx.commit();
 {pygmentize}
@@ -127,7 +123,7 @@ tx.commit();
 Retreiving data from an index:
 {pygmentize:: java}
 Transaction tx = pageFile.tx();
-Index<String, String> root = indexFactory.open(tx, 0);
+Index<String, String> root = indexFactory.open(tx);
 String result = root.get("Key:1");
 tx.commit();
 {pygmentize}
