@@ -108,6 +108,31 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         }
         return put;
     }
+
+    public Value putIfAbsent(Key key, Value value) {
+
+        Index<Key, Value> bucket = buckets.bucket(key);
+
+        if( fixedCapacity ) {
+            return bucket.putIfAbsent(key,value);
+        }
+
+        boolean wasEmpty = bucket.isEmpty();
+        Value put = bucket.putIfAbsent(key,value);
+
+        if (wasEmpty) {
+            buckets.active++;
+            storeBuckets();
+        }
+
+        if (buckets.active >= buckets.increaseThreshold) {
+            int capacity = Math.min(this.maximumBucketCapacity, buckets.capacity * 4);
+            if (buckets.capacity != capacity) {
+                this.changeCapacity(capacity);
+            }
+        }
+        return put;
+    }
     
     public Value remove(Key key) {
         Index<Key, Value> bucket = buckets.bucket(key);

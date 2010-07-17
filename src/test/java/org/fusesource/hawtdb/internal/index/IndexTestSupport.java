@@ -18,6 +18,7 @@ package org.fusesource.hawtdb.internal.index;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,6 +102,7 @@ public abstract class IndexTestSupport {
         doInsertHalf(COUNT);
         reloadIndex();
         checkRetrieve(COUNT);
+        doPutIfAbsent();
     }
 
     void doInsert(int count) throws Exception {
@@ -161,4 +163,15 @@ public abstract class IndexTestSupport {
         }
     }
 
+    void doPutIfAbsent() throws Exception {
+        index.put("myKey", 0L);
+        // Do not put on existent key:
+        assertEquals((Long) 0L, index.putIfAbsent("myKey", 1L));
+        assertEquals((Long) 0L, index.get("myKey"));
+        // Put on absent key:
+        assertEquals((Long) 1L, index.putIfAbsent("absent", 1L));
+        assertEquals((Long) 1L, index.get("absent"));
+        tx.commit();
+
+    }
 }

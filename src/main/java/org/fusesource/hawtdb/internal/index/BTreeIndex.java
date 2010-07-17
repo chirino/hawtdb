@@ -89,6 +89,10 @@ public class BTreeIndex<Key, Value> implements SortedIndex<Key, Value> {
         return root().put(this, key, value);
     }
 
+    public Value putIfAbsent(Key key, Value value) {
+        return root().putIfAbsent(this, key, value);
+    }
+
     public Value remove(Key key) {
         return root().remove(this, key);
     }

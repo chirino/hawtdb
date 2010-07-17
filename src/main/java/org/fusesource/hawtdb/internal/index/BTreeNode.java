@@ -435,6 +435,30 @@ public final class BTreeNode<Key, Value> {
         }
     }
 
+    public Value putIfAbsent(BTreeIndex<Key, Value> index, Key key, Value value) {
+        if (key == null) {
+            throw new IllegalArgumentException("Key cannot be null");
+        }
+
+        if (data.isBranch()) {
+            return getLeafNode(index, this, key).putIfAbsent(index, key, value);
+        } else {
+            int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
+            if (idx >= 0) {
+                // Key was found... return it
+                return data.values[idx];
+            } else {
+                // Key was not found, Insert it
+                idx = -(idx + 1);
+                data = data.leaf(arrayInsert(data.keys, key, idx), arrayInsert(data.values, value, idx));
+                if( !index.storeNode(this) ) {
+                    split(index);
+                }
+                return value;
+            }
+        }
+    }
+
     private void promoteValue(BTreeIndex<Key, Value> index, Key key, int nodeId) {
 
         int idx = Arrays.binarySearch(data.keys, key, index.getComparator());

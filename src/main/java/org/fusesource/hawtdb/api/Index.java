@@ -66,6 +66,15 @@ public interface Index<Key,Value> {
     Value put(Key key, Value entry);
 
     /**
+     * get the value at the given key, or put it if null.
+     *
+     * @param key
+     * @param entry
+     * @throws IOException
+     */
+    Value putIfAbsent(Key key, Value entry);
+
+    /**
      * @param key
      * @return the entry
      * @throws IOException
