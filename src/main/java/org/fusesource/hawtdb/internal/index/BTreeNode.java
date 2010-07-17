@@ -445,16 +445,16 @@ public final class BTreeNode<Key, Value> {
         } else {
             int idx = Arrays.binarySearch(data.keys, key, index.getComparator());
             if (idx >= 0) {
-                // Key was found... return it
+                // Key was found, return it
                 return data.values[idx];
             } else {
-                // Key was not found, Insert it
+                // Key was not found, insert it
                 idx = -(idx + 1);
                 data = data.leaf(arrayInsert(data.keys, key, idx), arrayInsert(data.values, value, idx));
                 if( !index.storeNode(this) ) {
                     split(index);
                 }
-                return value;
+                return null;
             }
         }
     }

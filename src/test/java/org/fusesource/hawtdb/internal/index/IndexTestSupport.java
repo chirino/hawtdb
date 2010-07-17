@@ -169,7 +169,7 @@ public abstract class IndexTestSupport {
         assertEquals((Long) 0L, index.putIfAbsent("myKey", 1L));
         assertEquals((Long) 0L, index.get("myKey"));
         // Put on absent key:
-        assertEquals((Long) 1L, index.putIfAbsent("absent", 1L));
+        assertEquals(null, index.putIfAbsent("absent", 1L));
         assertEquals((Long) 1L, index.get("absent"));
         tx.commit();
 
