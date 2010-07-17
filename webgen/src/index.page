@@ -56,8 +56,9 @@ Use a transactional page file when you need your indexes to have
 
 Sometimes you don't need an index to provide
 [ACID](http://en.wikipedia.org/wiki/ACID) levels of service. Perhaps your just
-using the index to page out of memory temporary values that can be discarded on
-restart. Then you just need to create a plain [`PageFile`]({api_base:}/api/PageFile.html) instead of a
+using the index to page out of memory temporary values that can be discarded
+on restart. Then you just need to create a plain
+[`PageFile`]({api_base:}/api/PageFile.html) instead of a
 [`TxPageFile`]({api_base:}/api/TxPageFile.html)
 
 Similar to transaction page files, a non-transactional page file is created with
@@ -73,9 +74,12 @@ factory.open();
 PageFile pageFile = factory.getPageFile();
 {pygmentize}
 
-Warning, since the page file is not transactional, you must serialize access to
-the index and page file yourself. Concurrent index updates will just step on
-each other and cause unexpected errors and index inconsistencies.
+Since the page file is not transactional, you must serialize access to
+the index and page file yourself. Concurrent index updates will just
+step on each other and cause unexpected errors and index
+inconsistencies. Furthermore, Non-Transactional page files do keep a
+persistent free page list. When it is reopened it will think all the
+pages can be used for new page updates.
 
 ## Using Indexes with Page Files
 
@@ -84,12 +88,22 @@ There are two kinds of indexes.  BTree and Hash based indexes.
 * BTree: Maintain keys in sorted order and support sorted iteration
 * Hash: Keys are not sorted.  Can perform better than hash indexes.
 
-You can store multiple indexes of different types in a single page file.  Both the BTree and Hash indexes use factory object to create instances of the index.  The factory holds configuration information for the index.  The factories support either creating an index at a new page location or open a previously created index at an existing page location.
+Both the BTree and Hash indexes use factory object to create instances
+of the index. The factory holds configuration information for the index.
+The factories support either creating a new index or opening a
+previously created index.
 
-For new indexes, you must allocate a new root page for the index.  The index itself will manage any additional pages that it needs 
-for storing indexed data.
+When an index is opened or created, you must pass it either
+[`PageFile`]({api_base:}/api/PageFile.html) or a
+[`Transaction`]({api_base:}/api/Transaction.html).
 
-When an index is opened or created, you must pass it a [`Paged`]({api_base:}/api/Paged.html) object.  In the case of a non-transaction page file, this would be the [`PageFile`]({api_base:}/api/PageFile.html) itself, but in the case of a transaction page file, then this would be a [`Transaction`]({api_base:}/api/Transaction.html) object created using the `tx()` method.
+Hash Index Non-Transactional Example:
+{pygmentize:: java}
+HashIndexFactory<String, String> indexFactory = 
+    new HashIndexFactory<String, String>();
+
+Index<String, String> root = indexFactory.create(pageFile);
+{pygmentize}
 
 BTree Index Transactional Example:
 {pygmentize:: java}
@@ -101,13 +115,26 @@ Index<String, String> root = indexFactory.create(tx);
 tx.commit();
 {pygmentize}
 
-Hash Index Non-Transactional Example:
-{pygmentize:: java}
-HashIndexFactory<String, String> indexFactory = 
-    new HashIndexFactory<String, String>();
 
-Index<String, String> root = indexFactory.create(pageFile);
+You should only create the indexes the first time you create/open 
+the page file.  An easy way to tell it's the first time the page
+file is to test to see the page file has allocated page 0.
+
+For Example:
+{pygmentize:: java}
+BTreeIndexFactory<String, String> indexFactory = 
+    new BTreeIndexFactory<String, String>();
+
+if( !pageFile.allocator().isAllocated(0) ) {
+    Transaction tx = pageFile.tx();
+    Index<String, String> root = indexFactory.create(tx);
+    tx.commit();
+}
 {pygmentize}
+
+Since indexes are created at the first free page in the page file, the
+index will get allocated at page 0.  Subsequently, when you reopen the
+page file, you will not end up allocating a new index root page.
 
 ### Accessing Index Data
 
@@ -145,16 +172,24 @@ operation or report the failure to the user.
 
 ## Customized Key/Value Encoding
 
-By default the indexes will use standard java object serialization to serialize keys and values.  If you want to provide a customized encoding strategy or if your key or value does not support object serialization, then you can configure key and value codecs on the index factory objects.
+By default the indexes will use standard java object serialization to
+serialize keys and values. If you want to provide a customized encoding
+strategy or if your key or value does not support object serialization, then
+you can configure key and value codecs on the index factory objects.
 
-For example, it is much more efficient to use the  [`StringCodec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/StringCodec.java) StringCodec when using String values than to standard object serialization:
+For example, it is about 30 times more efficient to use the
+[`StringCodec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/StringCodec.java)
+StringCodec when using String values than to standard object serialization:
 
 {pygmentize:: java}
 indexFactory.setKeyCodec(StringCodec.INSTANCE);
 indexFactory.setValueCodec(StringCodec.INSTANCE);
 {pygmentize}
 
-You can create custom Codec implementations by implementing the [`Codec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/Codec.java) class.
+
+You can create custom Codec implementations by implementing the
+[`Codec`](http://github.com/chirino/hawtbuf/blob/hawtbuf-project-1.0/hawtbuf-core/src/main/java/org/fusesource/hawtbuf/codec/Codec.java)
+class.
 
 ## Custom Comparators
 
@@ -205,13 +240,50 @@ the Predicate interface to create more complex predicates.
 
 ## Object Caching and Object Encoding Deferring
 
-If your keys and values are immutable values, then you should enable the deferred encoding option on the index.  This option allows the index to avoid encoding the keys and values when the index operations occur and instead places them on to an internally maintained object cache.  Keys/Values are not encoded 
-until the last possible moment, which is when the index pages are flushed to disk in a batch.  This allows you to avoid some encoding processing if the same key gets updated multiple times.  It also avoid some object decoding as a subsequent get operation can return a cached value instead of having to do a page decode.
+If your keys and values are immutable values, then you should enable the
+deferred encoding option on the index. This option allows the index to avoid
+encoding the keys and values when the index operations occur and instead
+places them on to an internally maintained object cache. Keys/Values are not
+encoded until the last possible moment, which is when the index pages are
+flushed to disk in a batch. This allows you to avoid some encoding
+processing if the same key gets updated multiple times. It also avoid some
+object decoding as a subsequent get operation can return a cached value
+instead of having to do a page decode.
 
 Example:
 {pygmentize:: java}
 indexFactory.setDeferredEncoding(true);
 {pygmentize}
 
+## Storing Multiple Indexes in one Page File
+
+HawtDB supports storing multiple indexes in a single page file.  This
+becomes desirable if you:
+
+* want to atomically update multiple indexes in single transaction 
+* have a large number of indexes and want to avoid using a file for each 
+  index
+
+Just create the indexes as usual, but you will also need to keep track
+of where in the page file the were allocated at.  For example:
+
+
+BTree Index Transactional Example:
+{pygmentize:: java}
+Index<String, String> index1 = indexFactory.create(tx);
+Index<String, String> index2 = indexFactory.create(tx);
+int location1 = index1.getIndexLocation();
+int location2 = index2.getIndexLocation();
+{pygmentize}
+
+You could store those locations in a root index or an external location.
+To open those indexes again, you would do something similar to:
+
+{pygmentize:: java}
+int location1 = ...
+int location2 = ...
+Index<String, String> index1 = indexFactory.open(tx, location1);
+Index<String, String> index1 = indexFactory.open(tx, location2);
+{pygmentize}
 ## References
 * [Full API]({api_base:}/api/package-summary.html)
