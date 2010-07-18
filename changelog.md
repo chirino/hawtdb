@@ -3,10 +3,12 @@
 
 [logo]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
 
-[HawtDB 1.2][1_2], un-released
+[HawtDB 1.2][1_2], released 2010-07-18
 -------------------------------------------
 [1_2]: http://hawtdb.fusesource.org/maven/1.2
 
+* added a putIfAbsent index operation
+* Using a default page size of 512
 * Upgrade to hawtbuf 1.1, allows us to test if the codec can estimate serialized size of key/values. if it can't deferred encoding/decoding is disabled.
 * Index getPage method renamed to getIndexLocation
 * Improved IndexFactory APIs: create and open methods default to using the root page. 
