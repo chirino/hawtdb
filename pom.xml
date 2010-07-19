@@ -284,6 +284,26 @@
   
 
   <profiles>
+
+    <!--
+      Enables a couple repositories that may be needed if some dependencies have not been replicated 
+      to maven central yet.
+    -->
+    <profile>
+      <id>download</id>
+
+      <repositories>
+        <repository>
+          <id>Fusesource Snapshots</id>
+          <url>http://repo.fusesource.com/nexus/content/repositories/snapshots</url>
+        </repository>
+        <repository>
+          <id>fluido-skin</id>
+          <url>http://fluido-skin.googlecode.com/svn/repo/</url>
+        </repository>
+      </repositories>
+    </profile>
+    
     <!--
       To generate a graph of the project dependencies, run: mvn -P graph
       graph:project
