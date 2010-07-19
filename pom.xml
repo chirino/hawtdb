@@ -79,7 +79,7 @@
     <connection>scm:git:git://forge.fusesource.com/${forge-project-id}.git</connection>
     <!-- Work around for issue: http://jira.codehaus.org/browse/SCM-444 -->
     <developerConnection>${release-altGitURL}</developerConnection>
-    <url>http://fusesource.com/forge/gitweb?p=${forge-project-id}.git</url>
+    <url>http://github.com/chirino/hawtdb/tree/master</url>
   </scm>
 
   <distributionManagement>
