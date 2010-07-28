@@ -29,7 +29,7 @@ final class BTreePredicateIterator<Key, Value> implements Iterator<Entry<Key, Va
 
     private final BTreeIndex<Key, Value> index;
     private Predicate<Key> predicate;
-    private final ArrayDeque<Data<Key, Value>> stack = new ArrayDeque<Data<Key, Value>>();
+    private final Stack<Data<Key, Value>> stack = new Stack<Data<Key, Value>>();
 
 
     private class Data<Key, Value> {
