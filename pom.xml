@@ -126,7 +126,7 @@
       <extension>
         <groupId>org.fusesource.mvnplugins</groupId>
         <artifactId>fuse-jxr-skin</artifactId>
-        <version>1.9-SNAPSHOT</version>
+        <version>1.9</version>
       </extension>
     </extensions>
 
@@ -311,7 +311,7 @@
             <resourcesArtifact>
               <groupId>org.fusesource.mvnplugins</groupId>
               <artifactId>fuse-javadoc-skin</artifactId>
-              <version>1.9-SNAPSHOT</version>
+              <version>1.9</version>
             </resourcesArtifact>
           </resourcesArtifacts>
           
