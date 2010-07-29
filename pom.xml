@@ -41,7 +41,7 @@
     <log4j-version>1.2.14</log4j-version>
   </properties>
 
-  <url>http://${forge-project-id}.fusesource.org</url>
+  <url>http://${forge-project-id}.fusesource.org/</url>
   <inceptionYear>2009</inceptionYear>
 
   <organization>
@@ -50,23 +50,27 @@
   </organization> 
 
   <issueManagement>
-    <system>jira</system>
-    <url>http://fusesource.com/issues/browse/${forge-project-id-uc}</url>
+    <system>assembla</system>
+    <url>http://www.assembla.com/spaces/hawtdb/support/tickets</url>
   </issueManagement>
   
   <mailingLists>
     <mailingList>
-      <name>${forge-project-id} dev</name>
-      <post>${forge-project-id}-dev@fusesource.org</post>
-      <subscribe>${forge-project-id}-dev-subscribe@fusesource.org</subscribe>
+      <name>Discussion Group</name>
+      <archive>http://groups.google.com/group/hawtdb</archive>
+      <post>hawtdb@googlegroups.com</post>
+      <subscribe>hawtdb+subscribe@googlegroups.com</subscribe>
+      <unsubscribe>hawtdb+unsubscribe@googlegroups.com</unsubscribe>
     </mailingList>
     <mailingList>
-      <name>${forge-project-id} commits</name>
-      <post>${forge-project-id}-commits@fusesource.org</post>
-      <subscribe>${forge-project-id}-commits-subscribe@fusesource.org</subscribe>
+      <name>Source Control and Issue Tracker Notifications</name>
+      <archive>http://groups.google.com/group/hawtdb-commits</archive>
+      <post>hawtdb-commits@googlegroups.com</post>
+      <subscribe>hawtdb-commits+subscribe@googlegroups.com</subscribe>
+      <unsubscribe>hawtdb-commits+unsubscribe@googlegroups.com</unsubscribe>
     </mailingList>
   </mailingLists>
-
+  
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -79,7 +83,7 @@
     <connection>scm:git:git://forge.fusesource.com/${forge-project-id}.git</connection>
     <!-- Work around for issue: http://jira.codehaus.org/browse/SCM-444 -->
     <developerConnection>${release-altGitURL}</developerConnection>
-    <url>http://fusesource.com/forge/gitweb?p=${forge-project-id}.git</url>
+    <url>http://github.com/chirino/hawtdb/tree/master</url>
   </scm>
 
   <distributionManagement>
@@ -118,6 +122,11 @@
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-webdav-jackrabbit</artifactId>
         <version>1.0-beta-6</version>
+      </extension>
+      <extension>
+        <groupId>org.fusesource.mvnplugins</groupId>
+        <artifactId>fuse-jxr-skin</artifactId>
+        <version>1.9</version>
       </extension>
     </extensions>
 
@@ -167,6 +176,12 @@
           <parallel>methods</parallel>
           <threadCount>16</threadCount>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>2.1.1</version>
       </plugin>
 
       <plugin>
@@ -225,35 +240,35 @@
         </dependencies>
       </plugin>           
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>2.1.1</version>
+        <dependencies>
+          <dependency>
+          <groupId>org.apache.maven.wagon</groupId>
+          <artifactId>wagon-webdav-jackrabbit</artifactId>
+          <version>1.0-beta-6</version>
+          <exclusions>
+            <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+            </exclusion>
+          </exclusions>
+         </dependency>
+        </dependencies>
+      </plugin>
+
     </plugins>
   </build>
   
   <reporting>
     <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>jxr-maven-plugin</artifactId>
-        <version>2.0-beta-1</version>
-        <configuration>
-          <aggregate>true</aggregate>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
-          <excludePackageNames>*.internal</excludePackageNames>
-          <linksource>true</linksource>
-          <links>
-            <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-          </links>
-        </configuration>
-      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.1.1</version>
+        <version>2.2</version>
         <reportSets>
           <reportSet>
             <reports>
@@ -269,21 +284,88 @@
           </reportSet>
         </reportSets>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>surefire-report-maven-plugin</artifactId>
-        <version>2.0-beta-1</version>
-      </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-plugin-plugin</artifactId>
-        <version>2.5</version>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>2.4.3</version>
       </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.7</version>
+        <configuration>
+        
+          <docfilessubdirs>true</docfilessubdirs>
+          <useStandardDocletOptions>true</useStandardDocletOptions>
+          <charset>UTF-8</charset>
+          <docencoding>UTF-8</docencoding>
+          <breakiterator>true</breakiterator>
+          <version>true</version>
+          <author>true</author>
+          <keywords>true</keywords>
+          
+          <stylesheetfile>${basedir}/target/site/testapidocs/stylesheet.css</stylesheetfile>
+          <resourcesArtifacts>
+            <resourcesArtifact>
+              <groupId>org.fusesource.mvnplugins</groupId>
+              <artifactId>fuse-javadoc-skin</artifactId>
+              <version>1.9</version>
+            </resourcesArtifact>
+          </resourcesArtifacts>
+          
+          <doctitle>${project.name} API Reference (${project.version})</doctitle>
+          <windowtitle>${project.name} API Reference (${project.version})</windowtitle>
+          <links>
+            <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+          </links>
+          <encoding>UTF-8</encoding>
+          <locale>en_US</locale>
+          <linksource>true</linksource>
+          <excludePackageNames>*.internal</excludePackageNames>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <stylesheet>fuse-jxr-skin-stylesheet.css</stylesheet>
+          <inputEncoding>UTF-8</inputEncoding>
+          <outputEncoding>UTF-8</outputEncoding>
+          <linkJavadoc>true</linkJavadoc>
+          <docTitle>${project.name} Source Xref (${project.version})</docTitle>
+          <windowTitle>${project.name} Source Xref (${project.version})</windowTitle>
+        </configuration>
+      </plugin>
+            
     </plugins>
   </reporting>
   
 
   <profiles>
+
+    <!--
+      Enables a couple repositories that may be needed if some dependencies have not been replicated 
+      to maven central yet.
+    -->
+    <profile>
+      <id>download</id>
+
+      <repositories>
+        <repository>
+          <id>Fusesource Snapshots</id>
+          <url>http://repo.fusesource.com/nexus/content/repositories/snapshots</url>
+        </repository>
+        <repository>
+          <id>fluido-skin</id>
+          <url>http://fluido-skin.googlecode.com/svn/repo/</url>
+        </repository>
+      </repositories>
+    </profile>
+    
     <!--
       To generate a graph of the project dependencies, run: mvn -P graph
       graph:project

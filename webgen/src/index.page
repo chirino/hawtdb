@@ -2,7 +2,7 @@
 title: HawtDB
 in_menu: true
 sort_info: 1
-api_base: http://hawtdb.fusesource.org/maven/1.0/apidocs/org/fusesource/hawtdb
+api_base: http://hawtdb.fusesource.org/maven/1.2/apidocs/org/fusesource/hawtdb
 --- name:overview pipeline:haml,tags
 
 %h1 {project_name:}

@@ -44,8 +44,6 @@ public class BigIndexTest {
 
         BTreeIndexFactory<String, String> indexFactory = new BTreeIndexFactory<String, String>();
         indexFactory.setComparator(new Comparator<String>() {
-
-            @Override
             public int compare(String o1, String o2) {
                 return o1.compareTo(o2) * -1;
             }
