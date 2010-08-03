@@ -86,12 +86,16 @@ pages can be used for new page updates.
 There are two kinds of indexes.  BTree and Hash based indexes.
 
 * BTree: Maintain keys in sorted order and support sorted iteration
-* Hash: Keys are not sorted.  Can perform better than hash indexes.
+* Hash: Keys are not sorted.  Can perform better than BTree indexes.
 
 Both the BTree and Hash indexes use factory object to create instances
 of the index. The factory holds configuration information for the index.
 The factories support either creating a new index or opening a
 previously created index.
+
+Index factories can be mixed and matched with the page files
+implementations.  So yes hash indexes can be used with either
+transaction or non transaction page files.
 
 When an index is opened or created, you must pass it either
 [`PageFile`]({api_base:}/api/PageFile.html) or a
