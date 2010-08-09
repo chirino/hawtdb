@@ -273,7 +273,7 @@ public final class BTreeNode<Key, Value> {
     private BTreeNode<Key,Value> getRightLeaf(BTreeIndex<Key, Value> index) {
         BTreeNode<Key,Value> cur = this;
         while(cur.isBranch()) {
-            cur = cur.getChild(index, data.keys.length);
+            cur = cur.getChild(index, cur.data.keys.length);
         }
         return cur;
     }

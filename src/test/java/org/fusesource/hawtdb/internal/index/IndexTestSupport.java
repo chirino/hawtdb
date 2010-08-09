@@ -16,12 +16,11 @@
  */
 package org.fusesource.hawtdb.internal.index;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 
 import org.fusesource.hawtdb.api.TxPageFile;
 import org.fusesource.hawtdb.api.TxPageFileFactory;
@@ -104,7 +103,27 @@ public abstract class IndexTestSupport {
         checkRetrieve(COUNT);
         doPutIfAbsent();
     }
-
+    
+    @Test
+    public void testRandomRemove() throws Exception {
+        createPageFileAndIndex((short)100);
+        final int count = 4000;
+        doInsert(count);
+        Random rand = new Random(0);
+        int i = 0, prev = 0;
+        while (!index.isEmpty()) {
+            prev = i;
+            i = rand.nextInt(count);
+            try {
+                index.remove(key(i));
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("unexpected exception on " + i + ", prev: " + prev + ", ex: " + e);
+            }
+            tx.commit();
+        }
+    }
+    
     void doInsert(int count) throws Exception {
         for (int i = 0; i < count; i++) {
             index.put(key(i), (long)i);
