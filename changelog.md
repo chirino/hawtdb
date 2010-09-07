@@ -3,6 +3,13 @@
 
 [logo]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
 
+[HawtDB 1.3][1_3], released 2010-09-07
+-------------------------------------------
+[1_3]: http://hawtdb.fusesource.org/maven/1.3
+
+* Fixing bug in btree index delete logic.
+* Java 1.5 Compat.
+
 [HawtDB 1.2][1_2], released 2010-07-18
 -------------------------------------------
 [1_2]: http://hawtdb.fusesource.org/maven/1.2
