@@ -179,6 +179,12 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
                         if( !du.allocated() ) {
                             // update has to occur on a shadow page.
                             du.shadow(pageFile.allocator().alloc(1));
+
+                            // free up the linked pages of the previous put
+                            List<Integer> freePages = du.marshaller.pagesLinked(pageFile, page);
+                            for (Integer linkedPage : freePages) {
+                                commit.merge(pageFile.allocator(), linkedPage, update().freed(true));
+                            }
                         }
 
                         List<Integer> linkedPages = du.marshaller.store(pageFile, du.translate(page), du.value);

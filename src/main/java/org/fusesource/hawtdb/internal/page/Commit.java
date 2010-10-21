@@ -87,7 +87,7 @@ final class Commit extends LinkedNode<Commit> implements Externalizable {
         for (Entry<Integer, Update> entry : updates.entrySet()) {
             merge(allocator, entry.getKey(), entry.getValue());
             if( traced(entry.getKey()) ) {
-                trace("merged: %s");
+                trace("merged: %s", entry);
             }
         }
         assert(stillSane());
