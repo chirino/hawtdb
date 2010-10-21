@@ -28,7 +28,7 @@
   <groupId>org.fusesource.hawtdb</groupId>
   <artifactId>hawtdb</artifactId>
   <packaging>bundle</packaging>
-  <version>1.5</version>
+  <version>1.6-SNAPSHOT</version>
 
   <name>HawtDB</name>
   <description>
