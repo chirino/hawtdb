@@ -38,7 +38,7 @@
   <properties>
     <forge-project-id>hawtdb</forge-project-id>
     <forge-project-id-uc>HAWTDB</forge-project-id-uc>
-    <release-altGitURL>scm:git:ssh://git@forge.fusesource.com/${forge-project-id}.git</release-altGitURL>
+    <release-altGitURL>scm:git:git@github.com:fusesource/hawtdb.git</release-altGitURL>
 
     <hawtbuf-version>1.2</hawtbuf-version>
     <commons-logging-version>1.1</commons-logging-version>

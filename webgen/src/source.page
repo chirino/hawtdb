@@ -13,32 +13,32 @@ Get the latest source code
 
 The *{project_name:}* project stores its source code in a [Git](http://git-scm.com/) repository hosted on [github](http://github.com) at this location:
 
-* [http://github.com/chirino/hawtdb](http://github.com/chirino/hawtdb)
+* [http://github.com/fusesource/hawtdb](http://github.com/fusesource/hawtdb)
 
 If you are new to Git you might like to try the [Git guide for subversion users](http://git.or.cz/course/svn.html) or have a look at the [Git community book](http://book.git-scm.com/).
 
-You can [browse the repository online](http://github.com/chirino/{project_id:}) if you prefer.
+You can [browse the repository online](http://github.com/fusesource/{project_id:}) if you prefer.
 
 ## How to Checkout
 
 Read only access to the repository is available at the following URL:
 
-* **git://github.com/chirino/{project_id:}.git**
+* **git://github.com/fusesource/{project_id:}.git**
 
 You must first install a [Git client](http://git-scm.com/download). Then you clone the repository using the following:
 
-    git clone git://github.com/chirino/{project_id:}.git
+    git clone git://github.com/fusesource/{project_id:}.git
     cd {project_id:}
 
 ## Committer access
 
 Project members can push to the repository using the following URL:
 
-* **git@github.com:chirino/{project_id:}.git**
+* **git@github.com:fusesource/{project_id:}.git**
 
 You must first install a [Git client](http://git-scm.com/download). Then you clone the repository using the Git URL:
 
-    git clone git@github.com:chirino/{project_id:}.git
+    git clone git@github.com:fusesource/{project_id:}.git
     cd {project_id:}
 
 ## Contributing patches
