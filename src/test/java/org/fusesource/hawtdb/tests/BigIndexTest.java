@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.fusesource.hawtdb;
+package org.fusesource.hawtdb.tests;
 
 import java.io.File;
 import java.io.IOException;
