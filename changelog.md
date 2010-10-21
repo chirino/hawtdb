@@ -1,18 +1,24 @@
-![HawtDB][logo]
-===============
+![HawtDB](http://hawtdb.fusesource.org/images/project-logo.png)
+===============================================================
 
-[logo]: http://hawtdb.fusesource.org/images/project-logo.png "HawtDB"
+[HawtDB 1.5](http://hawtdb.fusesource.org/maven/1.5), released 2010-10-21
+-------------------------------------------------------------------------
 
-[HawtDB 1.3][1_3], released 2010-09-07
--------------------------------------------
-[1_3]: http://hawtdb.fusesource.org/maven/1.3
+* Fixes allocation bug identified in [CAMEL-3249](https://issues.apache.org/activemq/browse/CAMEL-3249)
+
+[HawtDB 1.4](http://hawtdb.fusesource.org/maven/1.4), released 2010-09-14
+-------------------------------------------------------------------------
+
+* Upgrade to HawtBuf 1.2
+
+[HawtDB 1.3](http://hawtdb.fusesource.org/maven/1.3), released 2010-09-07
+-------------------------------------------------------------------------
 
 * Fixing bug in btree index delete logic.
 * Java 1.5 Compat.
 
-[HawtDB 1.2][1_2], released 2010-07-18
--------------------------------------------
-[1_2]: http://hawtdb.fusesource.org/maven/1.2
+[HawtDB 1.2](http://hawtdb.fusesource.org/maven/1.2), released 2010-07-18
+-------------------------------------------------------------------------
 
 * added a putIfAbsent index operation
 * Using a default page size of 512
@@ -23,9 +29,8 @@
 * Updated the predicates and vistor interfaces so that they are passed the Comparator configured on the index.  see #6 Documented custom comparators and also index iteration
 * Fixes #6 Allow configuring a custom comparators on BTree indexes
 
-[HawtDB 1.1][1_1], released 2010-07-01
--------------------------------------------
-[1_1]: http://hawtdb.fusesource.org/maven/1.1
+[HawtDB 1.1](http://hawtdb.fusesource.org/maven/1.1), released 2010-07-01
+-------------------------------------------------------------------------
 
 * Fixing BTree node next linking.. It was possible that a next link would not properly get set in some conditions during a node removal.
 * You can add get callbacks when a commit gets flushed to disk.
@@ -53,9 +58,8 @@
 * added a free() method to the Paged for symmetry with the alloc() method. 
 * Improved website documentation
 
-[HawtDB 1.0][1_0], released 2010-04-12
--------------------------------------------
-[1_0]: http://hawtdb.fusesource.org/maven/1.0
+[HawtDB 1.0](http://hawtdb.fusesource.org/maven/1.0), released 2010-04-12
+-------------------------------------------------------------------------
 
 * Initial release
 
