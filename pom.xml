@@ -265,14 +265,14 @@
           <author>true</author>
           <keywords>true</keywords>
           
-          <stylesheetfile>${basedir}/target/site/testapidocs/stylesheet.css</stylesheetfile>
+          <!-- <stylesheetfile>${basedir}/target/site/apidocs/stylesheet.css</stylesheetfile>
           <resourcesArtifacts>
             <resourcesArtifact>
               <groupId>org.fusesource.mvnplugins</groupId>
               <artifactId>fuse-javadoc-skin</artifactId>
               <version>1.9</version>
             </resourcesArtifact>
-          </resourcesArtifacts>
+          </resourcesArtifacts> -->
           
           <doctitle>${project.name} API Reference (${project.version})</doctitle>
           <windowtitle>${project.name} API Reference (${project.version})</windowtitle>
