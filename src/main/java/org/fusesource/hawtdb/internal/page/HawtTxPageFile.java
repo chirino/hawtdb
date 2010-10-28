@@ -33,10 +33,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 import java.util.zip.CRC32;
 
 import static org.fusesource.hawtdb.internal.page.Logging.*;
@@ -253,7 +250,25 @@ public final class HawtTxPageFile implements TxPageFile {
             worker = null;
         }
     }
-    
+
+    public void close() {
+        if( worker!=null ) {
+            final CountDownLatch done = new CountDownLatch(1);
+            worker.execute(new Runnable(){
+                public void run() {
+                    done.countDown();
+                    worker.shutdownNow();
+                }
+            });
+            try {
+                done.await();
+            } catch (InterruptedException e) {
+            }
+        }
+        flush();
+        performBatches();
+    }
+
     @Override
     public String toString() {
         return "{\n" +
@@ -831,30 +846,7 @@ public final class HawtTxPageFile implements TxPageFile {
             return new Snapshot(this, tracker, storedBatches).open();
         }
     }
-    
-    // /////////////////////////////////////////////////////////////////
-    // TODO:
-    // /////////////////////////////////////////////////////////////////
-    
-    /**
-     * The quiesce method is used to pause/stop access to the concurrent page file.
-     * access can be restored using the {@link #resume()} method.    
-     * 
-     * @param reads if true, the suspend will also suspend read only transactions. 
-     * @param blocking if true, transactions will block until the {@link #resume()} method 
-     *          is called, otherwise they will receive errors.
-     * @param drain if true, in progress transactions are allowed to complete, otherwise they
-     *        also are suspended. 
-     */
-    public void suspend(boolean reads, boolean blocking, boolean drain) {
-    }
 
-    /**
-     * Resumes a previously suspended page file. 
-     */
-    public void resume() {
-    }
-    
     
     // /////////////////////////////////////////////////////////////////
     // Helper methods

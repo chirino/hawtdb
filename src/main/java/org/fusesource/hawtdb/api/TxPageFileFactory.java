@@ -66,9 +66,7 @@ public class TxPageFileFactory {
      */
     public void close() {
         if (txPageFile != null) {
-            txPageFile.suspend(true, false, drainOnClose);
-            txPageFile.flush();
-            txPageFile.performBatches();
+            txPageFile.close();
             txPageFile=null;
         }
         pageFileFactory.close();
