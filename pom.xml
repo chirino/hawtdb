@@ -117,31 +117,28 @@
 
     <plugins>
       <plugin>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>maven-bundle-plugin</artifactId>
-         <version>2.0.0</version>
-         <extensions>true</extensions>
-         <configuration>
-           <instructions>
-             <Implementation-Title>HawtDB</Implementation-Title>
-             <Implementation-Vendor>FuseSource</Implementation-Vendor>
-             <Implementation-Vendor-Id>org.fusesource</Implementation-Vendor-Id>
-             <Implementation-Version>${pom.version}</Implementation-Version>
-             <Specification-Title>HawtDB</Specification-Title>
-             <Specification-Vendor>FuseSource</Specification-Vendor>
-             <Specification-Version>${pom.version}</Specification-Version>
-	     <Import-Package>
-               !org.fusesource.hawtdb*,
-               org.apache.commons.logging.*;version="[1.1,2)",
-	       *
-             </Import-Package>
-	     <Export-Package>
-               org.fusesource.hawtdb*;version=${pom.version};-split-package:=merge-first
-             </Export-Package>	     
-             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-           </instructions>
-         </configuration>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.4</version>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Implementation-Title>${project.description}</Implementation-Title>
+            <Implementation-Version>${project.version}</Implementation-Version>
+            <Bundle-Name>${project.artifactId}</Bundle-Name>
+            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+            <Export-Package>{local-packages};version=${project.version};-noimport:=true</Export-Package>
+            <Import-Package>*</Import-Package>
+            <Private-Package>!*</Private-Package>
+            <_versionpolicy-impl>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy-impl>
+            <_versionpolicy-uses>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy-uses>
+            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+            <_failok>false</_failok>
+          </instructions>
+        </configuration>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
