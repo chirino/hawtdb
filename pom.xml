@@ -40,7 +40,7 @@
     <forge-project-id-uc>HAWTDB</forge-project-id-uc>
     <release-altGitURL>scm:git:git@github.com:fusesource/hawtdb.git</release-altGitURL>
 
-    <hawtbuf-version>1.2</hawtbuf-version>
+    <hawtbuf-version>1.4</hawtbuf-version>
     <commons-logging-version>1.1</commons-logging-version>
     <junit-version>4.7</junit-version>
     <log4j-version>1.2.14</log4j-version>
