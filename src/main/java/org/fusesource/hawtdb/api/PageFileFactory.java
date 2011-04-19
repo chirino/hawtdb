@@ -16,11 +16,17 @@
  */
 package org.fusesource.hawtdb.api;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
+import org.fusesource.hawtbuf.AsciiBuffer;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFileFactory;
+import org.fusesource.hawtdb.internal.page.ExtentInputStream;
+import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
 import org.fusesource.hawtdb.internal.page.HawtPageFile;
+import org.fusesource.hawtdb.internal.util.Ranges;
 
 /**
  * A factory to create PageFile objects.
@@ -29,12 +35,22 @@ import org.fusesource.hawtdb.internal.page.HawtPageFile;
  */
 public class PageFileFactory {
 
+    static final AsciiBuffer HAWT_DB_PAGE_FILE_MAGIC;
+    static {
+        try {
+            HAWT_DB_PAGE_FILE_MAGIC = new AsciiBuffer("HawtDB/PageFile/1.0".getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private final MemoryMappedFileFactory mappedFileFactory = new MemoryMappedFileFactory();
     private HawtPageFile pageFile;
 
     protected int headerSize = 0;
     protected short pageSize = 512;
     protected int maxPages = Integer.MAX_VALUE;
+    protected boolean storeFreePages = true;
 
     public PageFile getPageFile() {
         return pageFile;
@@ -45,11 +61,7 @@ public class PageFileFactory {
      * the opened PageFile.
      */
     public void open() {
-        try {
-            mappedFileFactory.open();
-        } catch (IOException e) {
-            throw new IOPagingException(e);
-        }
+
         if (pageFile == null) {
             if( pageSize <= 0 ) {
                 throw new IllegalArgumentException("pageSize property must be greater than 0");
@@ -60,20 +72,83 @@ public class PageFileFactory {
             if( headerSize < 0 ) {
                 throw new IllegalArgumentException("headerSize property cannot be negative.");
             }
+            if( storeFreePages && headerSize==0 ) {
+                headerSize = 512;
+            }
             try {
-                pageFile = new HawtPageFile(mappedFileFactory.getMemoryMappedFile(), pageSize, headerSize, maxPages);
+
+                boolean recover = storeFreePages && getFile().exists() && getFile().length() > 512;
+
+                try {
+                    mappedFileFactory.open();
+                } catch (IOException e) {
+                    throw new IOPagingException(e);
+                }
+
+                int freePageExtent = -1;
+                if( storeFreePages ) {
+                    if( recover ) {
+                        Buffer header = new Buffer(512);
+                        mappedFileFactory.getMemoryMappedFile().read(0, header);
+                        DataByteArrayInputStream his = new DataByteArrayInputStream(header);
+
+                        Buffer magic = new Buffer(HAWT_DB_PAGE_FILE_MAGIC.length());
+                        his.readFully(magic.data, magic.offset, magic.length());
+                        if( !magic.ascii().equals(HAWT_DB_PAGE_FILE_MAGIC)) {
+                            throw new IOPagingException("File's magic does not match expected value");
+                        }
+                        freePageExtent = his.readInt();
+                        headerSize = his.readInt();
+                        pageSize = his.readShort();
+                    } else {
+                    }
+                }
+
+                pageFile = new HawtPageFile(mappedFileFactory.getMemoryMappedFile(), pageSize, headerSize, maxPages, storeFreePages);
+
+                if( freePageExtent >=0 ) {
+                    DataInputStream is = new DataInputStream(new ExtentInputStream(pageFile, freePageExtent));
+                    pageFile.allocator().getFreeRanges().readExternal(is);
+                    is.close();
+                }
+
+                if( pageFile.storeFreePages && !isReadOnly() ) {
+                    writePageFileHeader(-1);
+                }
+
+
             } catch (IOException e) {
                 throw new IOPagingException(e);
             }
         }
-    } 
-    
+    }
+
+    private void writePageFileHeader(int freePageExtent) throws IOException {
+        DataByteArrayOutputStream os = new DataByteArrayOutputStream();
+        os.write(HAWT_DB_PAGE_FILE_MAGIC);
+        os.writeInt(freePageExtent);
+        os.writeInt(headerSize);
+        os.writeShort(pageSize);
+        os.close();
+        mappedFileFactory.getMemoryMappedFile().write(0, os.toBuffer());
+    }
+
     /**
      * Closes the previously opened PageFile object.  Subsequent calls to 
      * {@link PageFileFactory#getPageFile()} will return null. 
      */
-    public void close() {
+    public void close() throws IOException {
         if (pageFile != null) {
+            pageFile.flush();
+            if( !isReadOnly() && pageFile.storeFreePages ) {
+                Ranges ranges = pageFile.allocator().getFreeRanges().copy();
+                int freePageExtent = pageFile.alloc();
+                DataOutputStream os = new DataOutputStream(new ExtentOutputStream(pageFile, freePageExtent, (short)1, (short)200));
+                ranges.writeExternal(os);
+                os.close();
+                writePageFileHeader(freePageExtent);
+            }
+            pageFile.flush();
             pageFile = null;
         }        
         mappedFileFactory.close();
@@ -117,5 +192,21 @@ public class PageFileFactory {
 
     public void setMappingSegementSize(int mappingSegementSize) {
         mappedFileFactory.setMappingSegementSize(mappingSegementSize);
+    }
+
+    public boolean isStoreFreePages() {
+        return storeFreePages;
+    }
+
+    public void setStoreFreePages(boolean storeFreePages) {
+        this.storeFreePages = storeFreePages;
+    }
+
+    public boolean isReadOnly() {
+        return mappedFileFactory.isReadOnly();
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        mappedFileFactory.setReadOnly(readOnly);
     }
 }

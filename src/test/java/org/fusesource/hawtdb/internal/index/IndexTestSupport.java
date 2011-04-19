@@ -72,7 +72,7 @@ public abstract class IndexTestSupport {
         
     }
 
-    protected void reloadAll() {
+    protected void reloadAll() throws IOException {
         int page = index.getIndexLocation();
         pff.close();
         pff.open();

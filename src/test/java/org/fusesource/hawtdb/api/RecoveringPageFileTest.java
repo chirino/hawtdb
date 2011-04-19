@@ -16,29 +16,42 @@
  */
 package org.fusesource.hawtdb.api;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
 import org.fusesource.hawtbuf.codec.LongCodec;
 import org.fusesource.hawtbuf.codec.StringCodec;
+import org.fusesource.hawtdb.internal.page.ExtentInputStream;
+import org.fusesource.hawtdb.internal.page.ExtentOutputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class RecoveryTest {
+public class RecoveringPageFileTest {
 
-    private TxPageFileFactory pff;
-    private TxPageFile pf;
+    private static final BTreeIndexFactory<Long,String> INDEX_FACTORY = new BTreeIndexFactory<Long,String>();
+    static {
+        INDEX_FACTORY.setKeyCodec(LongCodec.INSTANCE);
+        INDEX_FACTORY.setValueCodec(StringCodec.INSTANCE);
+        INDEX_FACTORY.setDeferredEncoding(false);
+    }
+
+    private PageFileFactory pff;
+    private PageFile pf;
+    SortedIndex<Long, String> index;
 
 
-    protected TxPageFileFactory createConcurrentPageFileFactory() {
-        TxPageFileFactory rc = new TxPageFileFactory();
+    protected PageFileFactory createConcurrentPageFileFactory() {
+        PageFileFactory rc = new PageFileFactory();
         rc.setPageSize((short) 512);
         rc.setFile(new File("target/test-data/" + getClass().getName() + ".db"));
         return rc;
@@ -49,7 +62,11 @@ public class RecoveryTest {
         pff = createConcurrentPageFileFactory();
         pff.getFile().delete();
         pff.open();
-        pf = pff.getTxPageFile();
+        pf = pff.getPageFile();
+
+        index = INDEX_FACTORY.create(pf);
+        assertEquals(0, index.getIndexLocation());
+        pf.flush();
     }
 
     @After
@@ -60,69 +77,48 @@ public class RecoveryTest {
     protected void reload() throws IOException {
         pff.close();
         pff.open();
-        pf = pff.getTxPageFile();
+        pf = pff.getPageFile();
+        index = INDEX_FACTORY.open(pf, 0);
     }
 
-    private static final BTreeIndexFactory<Long,String> ROOT_FACTORY = new BTreeIndexFactory<Long,String>();
-    static {
-        ROOT_FACTORY.setKeyCodec(LongCodec.INSTANCE);
-        ROOT_FACTORY.setValueCodec(StringCodec.INSTANCE);
-        ROOT_FACTORY.setDeferredEncoding(true);
-    }
 
     @Test
     public void testAddRollback() throws IOException, ClassNotFoundException {
 
         // Create the root index at the root page.
-        Transaction tx = pf.tx();
-        SortedIndex<Long, String> root = ROOT_FACTORY.create(tx);
-        assertEquals(0, root.getIndexLocation());
-        tx.commit();
-        pf.flush();
-
         int MAX_KEY=1000;
         long putCounter=0;
         long removeCounter=0;
 
         final Random random = new Random(7777);
 
-        for(int recoveryLoop=0; recoveryLoop < 100; recoveryLoop ++) {
+        for(int recoveryLoop=0; recoveryLoop < 30; recoveryLoop ++) {
             if( recoveryLoop%10 == 0 ) {
                 System.out.println("at recovery loop: "+recoveryLoop+", puts: "+putCounter+", removes: "+removeCounter);
             }
 
             // validate that the number of keys in the map is what is expected.
-            {
-                tx = pf.tx();
-                root = ROOT_FACTORY.open(tx, 0);
-                assertEquals(putCounter-removeCounter, root.size());
-                tx.commit();
-            }
-
+            assertEquals(putCounter - removeCounter, index.size());
 
             // Do a bunch of transactions before reloading the page file.
             for(int txLoop=0; txLoop < 1000; txLoop ++) {
-
-                tx = pf.tx();
-                root = ROOT_FACTORY.open(tx, 0);
 
                 // do a couple of random inserts and deletes.
                 for(int keyLoop=0; keyLoop < 10; keyLoop ++) {
 
                     Long key = (long)random.nextInt(MAX_KEY);
-                    String value = root.get(key);
+                    String value = index.get(key);
                     if( value == null ) {
-                        root.put(key, "value");
+                        index.put(key, "value");
                         putCounter++;
                     } else {
-                        root.remove(key);
+                        index.remove(key);
                         removeCounter++;
                     }
 
                 }
-                tx.commit();
 
-                // flush every 100 commits..
+                // flush every 100 ops..
                 if( txLoop%100 == 0 ) {
                     pf.flush();
                 }
@@ -135,4 +131,6 @@ public class RecoveryTest {
 
 
     }
+
+
 }

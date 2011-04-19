@@ -58,7 +58,7 @@ public class ExtentTest {
 	    pff.close();
 	}
 	
-	protected void reload() {
+	protected void reload() throws IOException {
         pff.close();
         pff.open();
         paged = pff.getPageFile();

@@ -21,6 +21,8 @@ import org.fusesource.hawtdb.api.PageFile;
 import org.fusesource.hawtdb.api.PagedAccessor;
 import org.fusesource.hawtdb.internal.io.MemoryMappedFile;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.fusesource.hawtdb.internal.page.Logging.*;
@@ -36,15 +38,24 @@ public class HawtPageFile implements PageFile {
     private final short pageSize;
     private final int headerSize;
     private final MemoryMappedFile file;
-    
-    
-    public HawtPageFile(MemoryMappedFile file, short pageSize, int headerSize, int maxPages) {
+    public final boolean storeFreePages;
+
+    public HawtPageFile(MemoryMappedFile file, short pageSize, int headerSize, int maxPages, boolean storeFreePages) throws IOException {
         this.file = file;
         this.allocator = new SimpleAllocator(maxPages);
         this.pageSize = pageSize;
         this.headerSize = headerSize;
+        this.storeFreePages = storeFreePages;
     }
-    
+
+    public void close() throws IOException {
+        if( storeFreePages ) {
+            DataOutputStream os = new DataOutputStream(new ExtentOutputStream(this, this.alloc(), (short)1, (short)1));
+            os.writeBoolean(true);
+            os.close();
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////
     //
     // Paged interface implementation.
@@ -148,5 +159,7 @@ public class HawtPageFile implements PageFile {
     public String toString() {
         return "{ header size: "+headerSize+", page size: "+pageSize+", allocator: "+allocator+" }";
     }
+
+
 
 }

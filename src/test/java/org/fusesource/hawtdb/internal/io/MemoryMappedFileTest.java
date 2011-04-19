@@ -33,7 +33,7 @@ public class MemoryMappedFileTest {
         File file = new File("target/foo.data");
         file.delete();
 
-        MemoryMappedFile mmf = new MemoryMappedFile(file, 1024*1024*100);
+        MemoryMappedFile mmf = new MemoryMappedFile(file, 1024*1024*100, false);
         
         int PAGE_SIZE = 1024*4;
         int LAST_PAGE = 100;

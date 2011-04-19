@@ -46,15 +46,17 @@ final public class MemoryMappedFile {
 	private final ByteBufferReleaser BYTE_BUFFER_RELEASER = createByteBufferReleaser();
 
 	private final int bufferSize;
-	private final ArrayList<MappedByteBuffer> buffers = new ArrayList<MappedByteBuffer>(10);
+    private final boolean readOnly;
+    private final ArrayList<MappedByteBuffer> buffers = new ArrayList<MappedByteBuffer>(10);
 	private final FileChannel channel;
 	private final FileDescriptor fd;
     private final HashSet<ByteBuffer> bounderyBuffers = new HashSet<ByteBuffer>(10);
 
 
-	public MemoryMappedFile(File file, int bufferSize) throws IOException {
+	public MemoryMappedFile(File file, int bufferSize, boolean readOnly) throws IOException {
 		this.bufferSize = bufferSize;
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+        this.readOnly = readOnly;
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
 		this.fd = randomAccessFile.getFD();
 		this.channel = randomAccessFile.getChannel();
 	}
@@ -102,6 +104,9 @@ final public class MemoryMappedFile {
 	}
 	
     public ByteBuffer slice(boolean readOnly, long position, int length) {
+        if( this.readOnly && !readOnly ) {
+            throw new IOPagingException("read only");
+        }
         int bufferIndex = (int) (position / bufferSize);
         int bufferOffset = (int) (position % bufferSize);
         ByteBuffer buffer = loadBuffer(bufferIndex);
@@ -152,6 +157,9 @@ final public class MemoryMappedFile {
 	}
 	
 	public void writeChannelTansfer(long position, ChannelTransfer transfer) throws IOPagingException {
+        if( this.readOnly ) {
+            throw new IOPagingException("read only");
+        }
 		try {
             channel.position(position);
             transfer.writeTo(channel);
@@ -161,14 +169,23 @@ final public class MemoryMappedFile {
 	}
 	
 	public void write(long position, byte[] data) throws IOPagingException {
+        if( this.readOnly ) {
+            throw new IOPagingException("read only");
+        }
 		this.write(position, data, 0, data.length);
 	}
 
 	public void write(long position, Buffer data) throws IOPagingException {
+        if( this.readOnly ) {
+            throw new IOPagingException("read only");
+        }
 		this.write(position, data.data, data.offset, data.length);
 	}
 
 	public void write(long position, ByteBuffer data) throws IOPagingException {
+        if( this.readOnly ) {
+            throw new IOPagingException("read only");
+        }
 		int bufferIndex = (int) (position / bufferSize);
 		int bufferOffset = (int) (position % bufferSize);
 		ByteBuffer buffer = loadBuffer(bufferIndex);
@@ -187,6 +204,9 @@ final public class MemoryMappedFile {
 
 	public void write(long position, byte[] data, int offset, int length)
 			throws IOPagingException {
+        if( this.readOnly ) {
+            throw new IOPagingException("read only");
+        }
 		int bufferIndex = (int) (position / bufferSize);
 		int bufferOffset = (int) (position % bufferSize);
 		ByteBuffer buffer = loadBuffer(bufferIndex);
@@ -227,6 +247,9 @@ final public class MemoryMappedFile {
 	}
 
 	public void sync() throws IOPagingException {
+        if( this.readOnly ) {
+            throw new IOPagingException("read only");
+        }
 		for (MappedByteBuffer buffer : buffers) {
 			if (buffer != null) {
 				buffer.force();

@@ -65,7 +65,7 @@ public class TxPageFileTest {
         pff.close();
     }
 
-    protected void reload() {
+    protected void reload() throws IOException {
         pff.close();
         pff.open();
         pf = pff.getTxPageFile();

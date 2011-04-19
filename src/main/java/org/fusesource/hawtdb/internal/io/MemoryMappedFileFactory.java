@@ -29,6 +29,7 @@ public class MemoryMappedFileFactory {
     private MemoryMappedFile memoryMappedFile;
     private File file;
     private int mappingSegementSize=1024*1024*64;
+    private boolean readOnly = false;
     
     public void open() throws IOException {
         if( memoryMappedFile == null ) {
@@ -40,7 +41,7 @@ public class MemoryMappedFileFactory {
             }
             // We auto create the parent directory.
             file.getCanonicalFile().getParentFile().mkdirs();
-            memoryMappedFile = new MemoryMappedFile(file, mappingSegementSize);
+            memoryMappedFile = new MemoryMappedFile(file, mappingSegementSize, readOnly);
         }
     }
     
@@ -68,5 +69,12 @@ public class MemoryMappedFileFactory {
     public void setMappingSegementSize(int mappingSegementSize) {
         this.mappingSegementSize = mappingSegementSize;
     }
-    
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
 }

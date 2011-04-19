@@ -17,6 +17,7 @@
 package org.fusesource.hawtdb.api;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.fusesource.hawtdb.internal.page.HawtPageFile;
 import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
@@ -38,6 +39,7 @@ public class TxPageFileFactory {
 
     public TxPageFileFactory() {
         pageFileFactory.setHeaderSize(HawtTxPageFile.FILE_HEADER_SIZE);
+        pageFileFactory.setStoreFreePages(false);
     }
 
     /**
@@ -64,7 +66,7 @@ public class TxPageFileFactory {
      * Closes the previously opened PageFile object.  Subsequent calls to 
      * {@link TxPageFileFactory#getTxPageFile()} will return null.
      */
-    public void close() {
+    public void close() throws IOException {
         if (txPageFile != null) {
             txPageFile.close();
             txPageFile=null;

@@ -16,13 +16,14 @@
  */
 package org.fusesource.hawtdb.internal.util;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 
+import org.fusesource.hawtbuf.AbstractVarIntSupport;
 import org.fusesource.hawtdb.util.TreeMap;
 import org.fusesource.hawtdb.util.TreeMap.TreeEntry;
 
@@ -31,7 +32,7 @@ import org.fusesource.hawtdb.util.TreeMap.TreeEntry;
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-final public class Ranges implements Serializable, Iterable<Ranges.Range> {
+final public class Ranges implements Externalizable, Iterable<Ranges.Range> {
     private static final long serialVersionUID = 8340484139329633582L;
 
     final public static class Range implements Serializable {
@@ -80,6 +81,14 @@ final public class Ranges implements Serializable, Iterable<Ranges.Range> {
     }
 
     private final TreeMap<Integer, Range> ranges = new TreeMap<Integer, Range>();
+
+    public Ranges copy() {
+        Ranges rc = new Ranges();
+        for (Range r : this) {
+            rc.ranges.put(r.start, range(r.start, r.end));
+        }
+        return rc;
+    }
 
     public void add(int start) {
         add(start, 1);
@@ -345,5 +354,67 @@ final public class Ranges implements Serializable, Iterable<Ranges.Range> {
     public boolean isEmpty() {
         return ranges.isEmpty();
     }
+
+    public void writeExternal(ObjectOutput out) throws IOException {
+        writeExternal((DataOutput)out);
+    }
+
+    public void readExternal(ObjectInput in) throws IOException {
+        readExternal((DataInput)in);
+    }
+    public void writeExternal(final DataOutput out) throws IOException {
+        ArrayList<Range> values = new ArrayList<Range>(ranges.values());
+        out.writeInt(values.size());
+        AbstractVarIntSupport helper = new AbstractVarIntSupport() {
+            @Override
+            protected byte readByte() throws IOException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            protected void writeByte(int value) throws IOException {
+                out.writeByte(value);
+            }
+        };
+
+        // We should get good compression since ranges should be
+        // close to each other and we are just recording a var int
+        // of the difference between the points.
+        int base = 0;
+        for( Range range: values) {
+            helper.writeVarInt(range.start-base);
+            base = range.start;
+            helper.writeVarInt(range.end-base);
+            base = range.end;
+        }
+
+    }
+
+    public void readExternal(final DataInput in) throws IOException {
+        ranges.clear();
+
+        int size = in.readInt();
+        AbstractVarIntSupport helper = new AbstractVarIntSupport() {
+            @Override
+            protected byte readByte() throws IOException {
+                return in.readByte();
+            }
+
+            @Override
+            protected void writeByte(int value) throws IOException {
+                throw new UnsupportedOperationException();
+            }
+        };
+
+        int base = 0;
+        for(int i=0; i < size; i++) {
+            base += helper.readVarInt();
+            int start = base;
+            base += helper.readVarInt();
+            int end = base;
+            ranges.put(start, range(start, end));
+        }
+    }
+
     
 }
