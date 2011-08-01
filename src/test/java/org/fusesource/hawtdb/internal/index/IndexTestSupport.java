@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import org.fusesource.hawtbuf.Buffer;
 
 import org.fusesource.hawtdb.api.TxPageFile;
 import org.fusesource.hawtdb.api.TxPageFileFactory;
@@ -85,6 +86,15 @@ public abstract class IndexTestSupport {
         int page = index.getIndexLocation();
         tx.commit();
         index = createIndex(page);
+    }
+
+    @Test
+    public void testOpenCloseOpen() throws Exception {
+        createPageFileAndIndex((short) 500);
+        reloadIndex();
+        doInsert(COUNT);
+        reloadAll();
+        checkRetrieve(COUNT);
     }
 
     @Test

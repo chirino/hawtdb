@@ -230,7 +230,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             BUCKET_PAGED_ACCESSOR.store(paged, page, buckets);
         }
     }
-    
+
     private void loadBuckets() {
         if( deferredEncoding ) {
             buckets = paged.get(BUCKET_PAGED_ACCESSOR, page);
@@ -313,7 +313,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public static final Buffer MAGIC = new Buffer(new byte[] {'h', 'a', 's', 'h'});
-    public static final int HEADER_SIZE = MAGIC.length+ 12; // bucketsPage, capacity, active
+    public static final int HEADER_SIZE = MAGIC.length + 8; // capacity, active
 
     private final PagedAccessor<Buckets<Key, Value>> BUCKET_PAGED_ACCESSOR = new PagedAccessor<Buckets<Key, Value>>() {
 
@@ -322,11 +322,11 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             try {
                 Buffer magic2 = MAGIC;
                 os.write(magic2.data, MAGIC.offset, MAGIC.length);
+                os.writeInt(buckets.active);
                 os.writeInt(buckets.capacity);
                 for (int i =0; i < buckets.capacity; i++) {
                     os.writeInt(buckets.bucketsIndex[i]);
                 }
-                os.writeInt(buckets.active);
             } catch (IOException e) {
                 throw new IOPagingException(e);
             }
@@ -338,21 +338,26 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
 
         public Buckets<Key, Value> load(Paged paged, int page) {
             Buckets<Key, Value> buckets = new Buckets<Key, Value>(HashIndex.this);
-            Buffer buffer = new Buffer(HEADER_SIZE);
-            paged.read(page, buffer);
-            DataByteArrayInputStream is = new DataByteArrayInputStream(buffer);
-            
+            DataByteArrayInputStream is = null;
+
+            Buffer header = new Buffer(HEADER_SIZE);
+            paged.read(page, header);
+            is = new DataByteArrayInputStream(header);
             Buffer magic = new Buffer(MAGIC.length);
             is.readFully(magic.data, magic.offset, magic.length);
             if (!magic.equals(MAGIC)) {
                 throw new IndexException("Not a hash page");
             }
+            buckets.active = is.readInt();
             buckets.capacity = is.readInt();
+
+            Buffer indexes = new Buffer(HEADER_SIZE + (buckets.capacity * 4));
+            paged.read(page, indexes);
+            is = new DataByteArrayInputStream(indexes.offset(HEADER_SIZE));
             buckets.bucketsIndex = new int[buckets.capacity];
             for (int i =0; i < buckets.capacity; i++) {
-                    buckets.bucketsIndex[i] = is.readInt();
-                }
-            buckets.active = is.readInt();
+                buckets.bucketsIndex[i] = is.readInt();
+            }
             
             return buckets;
         }

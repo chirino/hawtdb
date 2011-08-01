@@ -33,16 +33,13 @@ public class HashIndexTest extends IndexTestSupport {
         HashIndexFactory<String,Long> factory = new HashIndexFactory<String,Long>();
         factory.setKeyCodec(StringCodec.INSTANCE);
         factory.setValueCodec(LongCodec.INSTANCE);
+        factory.setBucketCapacity(1);
+        factory.setMinimumBucketCapacity(1);
+        factory.setMaximumBucketCapacity(1);
         if( page==-1 ) {
             return factory.create(tx);
         } else {
             return factory.open(tx, page);
         }
-    }
-
-
-    @Override
-    public void testRandomRemove() throws Exception {
-        // TODO: look into why this test is failing.  
     }
 }
