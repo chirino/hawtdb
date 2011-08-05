@@ -314,15 +314,13 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
 
         @Override
         protected void encode(Paged paged, DataOutputStream os, Buckets<Key, Value> data) throws IOException {
-            try {
-                os.write(MAGIC.data, MAGIC.offset, MAGIC.length);
-                os.writeInt(buckets.active);
-                os.writeInt(buckets.capacity);
-                for (int i =0; i < buckets.capacity; i++) {
-                    os.writeInt(buckets.bucketsIndex[i]);
-                }
-            } catch (IOException e) {
-                throw new IOPagingException(e);
+            os.write(MAGIC.data, MAGIC.offset, MAGIC.length);
+
+            os.writeInt(buckets.active);
+            os.writeInt(buckets.capacity);
+
+            for (int i =0; i < buckets.capacity; i++) {
+                os.writeInt(buckets.bucketsIndex[i]);
             }
         }
 
@@ -335,6 +333,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             if (!magic.equals(MAGIC)) {
                 throw new IOException("Not a hash page");
             }
+
             buckets.active = is.readInt();
             buckets.capacity = is.readInt();
 
