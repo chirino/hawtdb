@@ -33,9 +33,7 @@ public class HashIndexTest extends IndexTestSupport {
         HashIndexFactory<String,Long> factory = new HashIndexFactory<String,Long>();
         factory.setKeyCodec(StringCodec.INSTANCE);
         factory.setValueCodec(LongCodec.INSTANCE);
-        factory.setBucketCapacity(1);
-        factory.setMinimumBucketCapacity(1);
-        factory.setMaximumBucketCapacity(1);
+        factory.setBucketCapacity(1024);
         if( page==-1 ) {
             return factory.create(tx);
         } else {
