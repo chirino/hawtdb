@@ -687,10 +687,7 @@ public final class HawtTxPageFile implements TxPageFile {
         // Once a batch has been performed, subsequently synced, and no longer referenced,
         // it's allocated recovery space can be released.
         while( performedBatches!=storedBatches ) {
-            // don't need to sync /w transactions since they don't use the performedBatches variable.
-            // Transition performed -> released
-            performedBatches = performedBatches.getNext();
-
+            
             if( performedBatches.snapshots!=0 ) {
                 break;
             }
@@ -704,6 +701,10 @@ public final class HawtTxPageFile implements TxPageFile {
 
             // Free the batch record itself.
             Extent.free(pageFile, performedBatches.page);
+
+            // don't need to sync /w transactions since they don't use the performedBatches variable.
+            // Transition performed -> released
+            performedBatches = performedBatches.getNext();
 
             // removes the released batch form the batch list.
             performedBatches.getPrevious().unlink();

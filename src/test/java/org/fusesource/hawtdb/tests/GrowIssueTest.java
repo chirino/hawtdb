@@ -31,7 +31,6 @@ import org.junit.Ignore;
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-@Ignore
 public class GrowIssueTest {
 
 
