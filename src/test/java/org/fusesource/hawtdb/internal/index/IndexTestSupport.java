@@ -42,7 +42,6 @@ public abstract class IndexTestSupport {
     protected TxPageFile pf;
     protected Index<String,Long> index;
     protected Transaction tx;
-
     
     protected TxPageFileFactory createConcurrentPageFileFactory() {
         TxPageFileFactory rc = new TxPageFileFactory();
@@ -74,24 +73,20 @@ public abstract class IndexTestSupport {
     }
 
     protected void reloadAll() throws IOException {
-        int page = index.getIndexLocation();
         pff.close();
         pff.open();
         pf = pff.getTxPageFile();
         tx = pf.tx();
-        index = createIndex(page);
+        index = createIndex(index.getIndexLocation());
     }
     
     protected void reloadIndex() {
-        int page = index.getIndexLocation();
-        tx.commit();
-        index = createIndex(page);
+        index = createIndex(index.getIndexLocation());
     }
 
     @Test
-    public void testOpenCloseOpen() throws Exception {
+    public void testReloadFromDisk() throws Exception {
         createPageFileAndIndex((short) 500);
-        reloadIndex();
         doInsert(COUNT);
         reloadAll();
         checkRetrieve(COUNT);
@@ -100,7 +95,6 @@ public abstract class IndexTestSupport {
     @Test
     public void testIndexOperations() throws Exception {
         createPageFileAndIndex((short) 500);
-        reloadIndex();
         doInsert(COUNT);
         reloadIndex();
         checkRetrieve(COUNT);
@@ -111,7 +105,8 @@ public abstract class IndexTestSupport {
         doInsertHalf(COUNT);
         reloadIndex();
         checkRetrieve(COUNT);
-        doPutIfAbsent();
+        reloadIndex();
+        doPutIfAbsentAndVerify();
     }
     
     @Test
@@ -192,7 +187,7 @@ public abstract class IndexTestSupport {
         }
     }
 
-    void doPutIfAbsent() throws Exception {
+    void doPutIfAbsentAndVerify() throws Exception {
         index.put("myKey", 0L);
         // Do not put on existent key:
         assertEquals((Long) 0L, index.putIfAbsent("myKey", 1L));
