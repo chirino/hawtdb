@@ -5,6 +5,8 @@ nbactions.xml
 *.iml
 *.ipr
 *.iws
+*.orig
+*.bak
 webgen/out
 webgen/webgen.cache
 target
