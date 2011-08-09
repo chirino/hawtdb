@@ -80,21 +80,21 @@ public final class HawtTxPageFile implements TxPageFile {
     static private class Header {
 
         /** Identifies the file format */
-        public byte[] magic = new byte[32];
+        public volatile byte[] magic = new byte[32];
         /** The oldest applied commit revision */
-        public long base_revision;
+        public volatile long base_revision;
         /** The size of each page in the page file */
-        public int page_size;
+        public volatile int page_size;
         /** The page location of the free page list */
-        public int free_list_page;
+        public volatile int free_list_page;
 
         /** Where it is safe to resume recovery... Will be
          *  -1 if no recovery is needed. */
-        public int pessimistic_recovery_page;
+        public volatile int pessimistic_recovery_page;
 
         /** We try to recover from this point.. but it may fail since it's
          *  writes have not been synced to disk. */
-        public int optimistic_recovery_page;
+        public volatile int optimistic_recovery_page;
 
         public String toString() {
             return "{ base_revision: "+this.base_revision+
@@ -176,7 +176,7 @@ public final class HawtTxPageFile implements TxPageFile {
     final HawtPageFile pageFile;
     private static final int updateBatchSize = 1024;
     private final boolean synch;
-    private int lastBatchPage = -1;
+    private volatile int lastBatchPage = -1;
 
     //
     // The following batch objects point to linked nodes in the previous batch list.
@@ -184,16 +184,16 @@ public final class HawtTxPageFile implements TxPageFile {
     //
 
     /** The current batch that is currently being assembled. */
-    Batch openBatch;
+    volatile Batch openBatch;
     /** The batches that are being stored... These might be be recoverable. */
-    Batch storingBatches;
+    volatile Batch storingBatches;
     /** The stored batches. */
-    Batch storedBatches;
+    volatile Batch storedBatches;
     /** The performed batches.  Page updates have been copied from the redo pages to the original page locations. */
-    Batch performedBatches;
+    volatile Batch performedBatches;
 
     /** A read cache used to speed up access to frequently used pages */
-    ReadCache readCache;
+    volatile ReadCache readCache;
 
     //
     // Profilers like yourkit just tell which mutex class was locked.. so create a different class for each mutex
@@ -897,7 +897,9 @@ public final class HawtTxPageFile implements TxPageFile {
             T rc = (T) map.get(pageId);
             if( rc ==null ) {
                 rc = marshaller.load(pageFile, pageId);
-                map.put(pageId, rc);
+                if (rc != null) {
+                    map.put(pageId, rc);
+                }
             }
             return rc;
         }

@@ -33,7 +33,7 @@ import static org.fusesource.hawtdb.internal.page.Logging.*;
 public class SimpleAllocator implements Allocator {
 
     private final Ranges freeRanges = new Ranges();
-    private int limit;
+    private volatile int limit;
 
     public SimpleAllocator(int limit) {
         this.limit = limit;

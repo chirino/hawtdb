@@ -75,7 +75,7 @@ public final class BTreeNode<Key, Value> {
             this.values = values;
             this.children = children;
             this.next = next;
-        }        
+        }
         
         @Override
         public String toString() {
@@ -230,12 +230,12 @@ public final class BTreeNode<Key, Value> {
 
     }
 
-    BTreeNode<Key, Value> parent;
+    volatile BTreeNode<Key, Value> parent;
     // The persistent data of the node.
-    Data<Key, Value> data;
+    volatile Data<Key, Value> data;
     // The page associated with this node
-    int page;
-    boolean storedInExtent;
+    volatile int page;
+    volatile boolean storedInExtent;
     
     @SuppressWarnings("unchecked")
     public BTreeNode(BTreeNode<Key, Value> parent, int page) {
