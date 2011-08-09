@@ -277,6 +277,9 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         
         public void destroy() {
             clear();
+            for (int i = 0; i < capacity; i++) {
+                index.paged.allocator().free(bucketsIndex[i], 1);
+            }
         }
         
         public void clear() {
