@@ -20,27 +20,33 @@ import org.fusesource.hawtdb.api.HashIndexFactory;
 import org.fusesource.hawtdb.api.Index;
 import org.fusesource.hawtbuf.codec.LongCodec;
 import org.fusesource.hawtbuf.codec.StringCodec;
-
+import org.fusesource.hawtdb.api.Transaction;
 
 /**
- * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ * @author Sergio Bossa
  */
-public class HashIndexTest extends IndexTestSupport {
+public class HashIndexConcurrencyTest extends ConcurrencyTestSupport {
 
     @Override
-    protected Index<String, Long> createIndex(int page) {
-        HashIndexFactory<String,Long> factory = new HashIndexFactory<String,Long>();
+    protected Index<String, Long> createIndex() {
+        HashIndexFactory<String, Long> factory = new HashIndexFactory<String, Long>();
         factory.setKeyCodec(StringCodec.INSTANCE);
         factory.setValueCodec(LongCodec.INSTANCE);
-        // Configure a large fixed capacity in order to avoid too much resizings which would saturate memory:
-        factory.setFixedCapacity(8192);
         //
-        factory.setDeferredEncoding(false);
-        if( page==-1 ) {
-            return factory.create(tx);
-        } else {
-            return factory.open(tx, page);
-        }
+        Transaction tx = pageFile.tx();
+        Index<String, Long> index = factory.create(tx);
+        tx.commit();
+        return index;
     }
+
+    @Override
+    protected Index<String, Long> openIndex(Transaction tx) {
+        HashIndexFactory<String, Long> factory = new HashIndexFactory<String, Long>();
+        factory.setKeyCodec(StringCodec.INSTANCE);
+        factory.setValueCodec(LongCodec.INSTANCE);
+        //
+        Index<String, Long> index = factory.open(tx);
+        return index;
+    }
+
 }

@@ -332,7 +332,7 @@ final class HawtTransaction implements Transaction {
                     Integer page = entry.getKey();
                     Update update = entry.getValue();
                     if( !update.freed() ) {
-                        parent.allocator.free(update.translate(page), 1);
+                        allocator().free(update.translate(page), 1);
                     }
                 }
             }

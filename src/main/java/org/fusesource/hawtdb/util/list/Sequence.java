@@ -23,8 +23,8 @@ package org.fusesource.hawtdb.util.list;
  * @author chirino
  */
 public class Sequence extends LinkedNode<Sequence> {
-    long first;
-    long last;
+    volatile long first;
+    volatile long last;
 
     public Sequence(long value) {
         first = last = value;

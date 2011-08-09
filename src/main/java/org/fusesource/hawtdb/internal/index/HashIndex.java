@@ -62,8 +62,8 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public HashIndex<Key, Value> create() {
-        buckets = new Buckets<Key, Value>(this);
-        buckets.create(initialBucketCapacity);
+        buckets = new Buckets<Key, Value>();
+        buckets.create(this, initialBucketCapacity);
         storeBuckets();
         return this;
     }
@@ -75,16 +75,16 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
 
 
     public Value get(Key key) {
-        return buckets.bucket(key).get(key);
+        return buckets.bucket(this, key).get(key);
     }
     
     public boolean containsKey(Key key) {
-        return buckets.bucket(key).containsKey(key);
+        return buckets.bucket(this, key).containsKey(key);
     }
     
     public Value put(Key key, Value value) {
         
-        Index<Key, Value> bucket = buckets.bucket(key);
+        Index<Key, Value> bucket = buckets.bucket(this, key);
         
         if( fixedCapacity ) {
             return bucket.put(key,value);
@@ -109,7 +109,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
 
     public Value putIfAbsent(Key key, Value value) {
 
-        Index<Key, Value> bucket = buckets.bucket(key);
+        Index<Key, Value> bucket = buckets.bucket(this, key);
 
         if( fixedCapacity ) {
             return bucket.putIfAbsent(key,value);
@@ -133,7 +133,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     }
     
     public Value remove(Key key) {
-        Index<Key, Value> bucket = buckets.bucket(key);
+        Index<Key, Value> bucket = buckets.bucket(this, key);
         
         if( fixedCapacity ) {
             return bucket.remove(key);
@@ -158,7 +158,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public void clear() {
-        buckets.clear();
+        buckets.clear(this);
         if (buckets.capacity!=initialBucketCapacity) {
             changeCapacity(initialBucketCapacity);
         }
@@ -167,7 +167,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     public int size() {
         int rc=0;
         for (int i = 0; i < buckets.capacity; i++) {
-            rc += buckets.bucket(i).size();
+            rc += buckets.bucket(this, i).size();
         }
         return rc;
     }
@@ -177,7 +177,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     }    
     
     public void destroy() {
-        buckets.destroy();
+        buckets.destroy(this);
         buckets = null;
         paged.free(page);
     }
@@ -192,17 +192,17 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     private void changeCapacity(final int capacity) {
         debug("Resizing to: %d", capacity);
         
-        Buckets<Key, Value> next = new Buckets<Key, Value>(this);
-        next.create(capacity);
+        Buckets<Key, Value> next = new Buckets<Key, Value>();
+        next.create(this, capacity);
 
         // Copy the data from the old buckets to the new buckets.
         for (int i = 0; i < buckets.capacity; i++) {
-            SortedIndex<Key, Value> bin = buckets.bucket(i);
+            SortedIndex<Key, Value> bin = buckets.bucket(this, i);
             HashSet<Integer> activeBuckets = new HashSet<Integer>();
             for (Map.Entry<Key, Value> entry : bin) {
                 Key key = entry.getKey();
                 Value value = entry.getValue();
-                Index<Key, Value> bucket = next.bucket(key);
+                Index<Key, Value> bucket = next.bucket(this, key);
                 bucket.put(key, value);
                 if( activeBuckets.add(bucket.getIndexLocation()) ) {
                     next.active++;
@@ -210,7 +210,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             }
         }
         
-        buckets.destroy();
+        buckets.destroy(this);
         buckets = next;
         storeBuckets();
         
@@ -248,7 +248,6 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
      */
     static private class Buckets<Key,Value> {
 
-        final HashIndex<Key,Value> index;
         int active;
         int capacity;
         int[] bucketsIndex;
@@ -256,42 +255,41 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         int increaseThreshold;
         int decreaseThreshold;
 
-        public Buckets(HashIndex<Key, Value> index) {
-            this.index = index;
-        }
-
-        private void calcThresholds() {
+        private void calcThresholds(HashIndex<Key,Value> index) {
             increaseThreshold = (capacity * index.loadFactor)/100;
             decreaseThreshold = (capacity * index.loadFactor * index.loadFactor ) / 20000;
         }
 
-        void create(int capacity) {
+        void create(HashIndex<Key,Value> index, int capacity) {
             this.active = 0;
             this.capacity = capacity;
             this.bucketsIndex = new int[capacity];
             for (int i = 0; i < capacity; i++) {
                 this.bucketsIndex[i] = index.BIN_FACTORY.create(index.paged).getIndexLocation();
             }
-            calcThresholds();
+            calcThresholds(index);
         }
         
-        public void destroy() {
-            clear();
+        public void destroy(HashIndex<Key,Value> index) {
+            clear(index);
+            for (int i = 0; i < capacity; i++) {
+                index.paged.allocator().free(bucketsIndex[i], 1);
+            }
         }
         
-        public void clear() {
+        public void clear(HashIndex<Key,Value> index) {
             for (int i = 0; i < index.buckets.capacity; i++) {
-                index.buckets.bucket(i).clear();
+                index.buckets.bucket(index, i).clear();
             }
             index.buckets.active = 0;
-            index.buckets.calcThresholds();
+            index.buckets.calcThresholds(index);
         }
         
-        SortedIndex<Key,Value> bucket(int bucket) {
+        SortedIndex<Key,Value> bucket(HashIndex<Key,Value> index, int bucket) {
             return index.BIN_FACTORY.open(index.paged, bucketsIndex[bucket]);
         }
 
-        SortedIndex<Key,Value> bucket(Key key) {
+        SortedIndex<Key,Value> bucket(HashIndex<Key,Value> index, Key key) {
             int i = index(key);
             return index.BIN_FACTORY.open(index.paged, bucketsIndex[i]);
         }
@@ -314,27 +312,26 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
 
         @Override
         protected void encode(Paged paged, DataOutputStream os, Buckets<Key, Value> data) throws IOException {
-            try {
-                os.write(MAGIC.data, MAGIC.offset, MAGIC.length);
-                os.writeInt(buckets.active);
-                os.writeInt(buckets.capacity);
-                for (int i =0; i < buckets.capacity; i++) {
-                    os.writeInt(buckets.bucketsIndex[i]);
-                }
-            } catch (IOException e) {
-                throw new IOPagingException(e);
+            os.write(MAGIC.data, MAGIC.offset, MAGIC.length);
+
+            os.writeInt(buckets.active);
+            os.writeInt(buckets.capacity);
+
+            for (int i =0; i < buckets.capacity; i++) {
+                os.writeInt(buckets.bucketsIndex[i]);
             }
         }
 
         @Override
         protected Buckets<Key, Value> decode(Paged paged, DataInputStream is) throws IOException {
-            Buckets<Key, Value> buckets = new Buckets<Key, Value>(HashIndex.this);
+            Buckets<Key, Value> buckets = new Buckets<Key, Value>();
 
             Buffer magic = new Buffer(MAGIC.length);
             is.readFully(magic.data, magic.offset, magic.length);
             if (!magic.equals(MAGIC)) {
                 throw new IOException("Not a hash page");
             }
+
             buckets.active = is.readInt();
             buckets.capacity = is.readInt();
 

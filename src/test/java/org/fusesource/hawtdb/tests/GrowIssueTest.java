@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import org.junit.Ignore;
 
 /**
  * <p>
@@ -30,6 +31,7 @@ import java.io.File;
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@Ignore
 public class GrowIssueTest {
 
 
