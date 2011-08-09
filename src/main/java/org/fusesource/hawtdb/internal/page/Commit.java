@@ -42,16 +42,15 @@ import static org.fusesource.hawtdb.internal.page.Logging.traced;
 final class Commit extends LinkedNode<Commit> implements Externalizable {
 
     /** Tracks open snapshots against this commit */
-    SnapshotTracker snapshotTracker;
+    volatile SnapshotTracker snapshotTracker;
 
     /** oldest revision in the commit range. */
-    private long base; 
+    private volatile long base;
     /** newest revision in the commit range, will match base if this only tracks one commit */ 
-    private long head;
+    private volatile long head;
     
     /** all the page updates that are part of the redo */
-    ConcurrentHashMap<Integer, Update> updates;
-
+    volatile ConcurrentHashMap<Integer, Update> updates;
 
     public Commit() {
     }
@@ -100,7 +99,6 @@ final class Commit extends LinkedNode<Commit> implements Externalizable {
      * @param update
      */
     void merge(Allocator allocator, int page, Update update) {
-
         assert !(update.allocated() && update.shadowed() && update.freed()) : "This update can't be in multiple states";
 
         Update previous = this.updates.put(page, update);

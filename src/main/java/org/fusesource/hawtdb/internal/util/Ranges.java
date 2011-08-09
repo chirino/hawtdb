@@ -38,8 +38,8 @@ final public class Ranges implements Externalizable, Iterable<Ranges.Range> {
     final public static class Range implements Serializable {
         private static final long serialVersionUID = -4904483630105365841L;
         
-        public int start;
-        public int end;
+        public volatile int start;
+        public volatile int end;
 
         public Range(int start, int end) {
             this.start = start;

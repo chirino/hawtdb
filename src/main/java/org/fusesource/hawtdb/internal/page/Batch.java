@@ -46,24 +46,24 @@ final class Batch extends LinkedNode<Batch> implements Externalizable, Iterable<
     private static final long serialVersionUID = 1188640492489990493L;
     
     /** the pageId that this redo batch is stored at */
-    int page=-1;
+    volatile int page=-1;
     /** points to a previous redo batch page */
-    public int previous=-1;
+    public volatile int previous=-1;
     /** was this object reloaded from disk? */
-    boolean recovered;
+    volatile boolean recovered;
     
     /** the commits and snapshots in the redo */ 
     final LinkedNodeList<Commit> commits = new LinkedNodeList<Commit>();
     /** tracks how many snapshots are referencing the redo */
-    int snapshots;
+    volatile int snapshots;
     /** the oldest commit in this redo */
-    public long base=-1;
+    public volatile long base=-1;
     /** the newest commit in this redo */
-    public long head;
+    public volatile long head;
 
-    boolean performed;
+    volatile boolean performed;
 
-    ArrayList<Runnable> flushCallbacks = new ArrayList<Runnable>();
+    volatile ArrayList<Runnable> flushCallbacks = new ArrayList<Runnable>();
     
     public Batch() {
     }

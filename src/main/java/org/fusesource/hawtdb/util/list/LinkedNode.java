@@ -24,9 +24,9 @@ package org.fusesource.hawtdb.util.list;
  */
 public class LinkedNode<T extends LinkedNode<T>> {
 
-    protected LinkedNodeList<T> list;
-    protected T next;
-    protected T prev;
+    protected volatile LinkedNodeList<T> list;
+    protected volatile T next;
+    protected volatile T prev;
 
     public LinkedNode() {
     }
