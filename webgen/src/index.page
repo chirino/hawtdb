@@ -2,7 +2,7 @@
 title: HawtDB
 in_menu: true
 sort_info: 1
-api_base: http://hawtdb.fusesource.org/maven/1.2/apidocs/org/fusesource/hawtdb
+api_base: http://hawtdb.fusesource.org/maven/1.6/apidocs/org/fusesource/hawtdb
 --- name:overview pipeline:haml,tags
 
 %h1 {project_name:}
@@ -120,25 +120,21 @@ tx.commit();
 {pygmentize}
 
 
-You should only create the indexes the first time you create/open 
-the page file.  An easy way to tell it's the first time the page
-file is to test to see the page file has allocated page 0.
+HawtDB also provides a method to open or create an index, so you don't have to worry if the index
+already exists or not.
 
 For Example:
 {pygmentize:: java}
 BTreeIndexFactory<String, String> indexFactory = 
     new BTreeIndexFactory<String, String>();
 
-if( !pageFile.allocator().isAllocated(0) ) {
-    Transaction tx = pageFile.tx();
-    Index<String, String> root = indexFactory.create(tx);
-    tx.commit();
+Index<String, String> root = indexFactory.openOrCreate(tx);
+    
+tx.commit();
 }
 {pygmentize}
 
-Since indexes are created at the first free page in the page file, the
-index will get allocated at page 0.  Subsequently, when you reopen the
-page file, you will not end up allocating a new index root page.
+This method actually is the preferred way to access an index.
 
 ### Accessing Index Data
 
@@ -259,35 +255,38 @@ Example:
 indexFactory.setDeferredEncoding(true);
 {pygmentize}
 
-## Storing Multiple Indexes in one Page File
+## Support for Multiple Indexes in one Page File
 
-HawtDB supports storing multiple indexes in a single page file.  This
-becomes desirable if you:
+HawtDB supports storing multiple (correlated) indexes in a single page file.  
+This becomes desirable if you:
 
 * want to atomically update multiple indexes in single transaction 
 * have a large number of indexes and want to avoid using a file for each 
   index
 
-Just create the indexes as usual, but you will also need to keep track
-of where in the page file the were allocated at.  For example:
-
-
-BTree Index Transactional Example:
-{pygmentize:: java}
-Index<String, String> index1 = indexFactory.create(tx);
-Index<String, String> index2 = indexFactory.create(tx);
-int location1 = index1.getIndexLocation();
-int location2 = index2.getIndexLocation();
-{pygmentize}
-
-You could store those locations in a root index or an external location.
-To open those indexes again, you would do something similar to:
+You can do that by using the special purpose [MultiIndexFactory]({api_base:}/api/MultiIndexFactory.html), which works by identifying 
+each index by name, and using such a name to refer to the index for later reopening.
+For example:
 
 {pygmentize:: java}
-int location1 = ...
-int location2 = ...
-Index<String, String> index1 = indexFactory.open(tx, location1);
-Index<String, String> index1 = indexFactory.open(tx, location2);
+MultiIndexFactory multiIndexFactory = new MultiIndexFactory(tx);
+IndexFactory<String, String> indexFactory1 = new BTreeIndexFactory<String, String>();
+IndexFactory<String, String> indexFactory2 = new HashIndexFactory<String, String>();
+Index<String, String> index1 = multiIndexFactory.create("1", indexFactory1);
+Index<String, String> index2 = multiIndexFactory.create("2", indexFactory2);
 {pygmentize}
+
+To open those indexes again, just provide their name and index factory:
+
+{pygmentize:: java}
+MultiIndexFactory multiIndexFactory = new MultiIndexFactory(tx);
+IndexFactory<String, String> indexFactory1 = new BTreeIndexFactory<String, String>();
+IndexFactory<String, String> indexFactory2 = new HashIndexFactory<String, String>();
+Index<String, String> index1 = multiIndexFactory.open("1", indexFactory1);
+Index<String, String> index2 = multiIndexFactory.open("2", indexFactory2);
+{pygmentize}
+
+MultiIndexFactory also provides an openOrCreate method analogous to the one previously described.
+
 ## References
 * [Full API]({api_base:}/api/package-summary.html)
