@@ -46,4 +46,11 @@ public interface IndexFactory<Key, Value> {
      * @return
      */
     public Index<Key, Value> open(Paged paged);
+    
+    /**
+     *
+     * @param paged
+     * @return
+     */
+    public Index<Key, Value> openOrCreate(Paged paged);
 }

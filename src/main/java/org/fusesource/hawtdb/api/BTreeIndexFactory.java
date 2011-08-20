@@ -51,7 +51,7 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
 
     private Codec<Key> keyCodec = new ObjectCodec<Key>();
     private Codec<Value> valueCodec = new ObjectCodec<Value>();
-    private boolean deferredEncoding=true;
+    private boolean deferredEncoding = true;
     private Prefixer<Key> prefixer;
     private Comparator comparator = null;
 
@@ -63,12 +63,12 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
         index.create();
         return index;
     }
-    
+
     @Override
     public String toString() {
-        return "{ deferredEncoding: "+deferredEncoding+" }";
+        return "{ deferredEncoding: " + deferredEncoding + " }";
     }
-    
+
     /**
      * Loads an existing BTree index from the paged object.
      */
@@ -81,6 +81,16 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
      */
     public SortedIndex<Key, Value> open(Paged paged) {
         return createInstance(paged, 0);
+    }
+
+    public SortedIndex<Key, Value> openOrCreate(Paged paged) {
+        if (paged.allocator().isAllocated(0)) {
+            return createInstance(paged, 0);
+        } else {
+            BTreeIndex<Key, Value> index = createInstance(paged, paged.alloc());
+            index.create();
+            return index;
+        }
     }
 
     private BTreeIndex<Key, Value> createInstance(Paged paged, int page) {
@@ -175,4 +185,5 @@ public class BTreeIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     public void setComparator(Comparator comparator) {
         this.comparator = comparator;
     }
+
 }

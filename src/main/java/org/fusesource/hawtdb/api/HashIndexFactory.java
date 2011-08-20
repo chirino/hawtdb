@@ -42,20 +42,19 @@ import org.fusesource.hawtdb.internal.index.HashIndex;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
-    
-    public static final String PROPERTY_PREFIX = HashIndex.class.getName()+".";
-    public static final int DEFAULT_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX+"DEFAULT_BUCKET_CAPACITY", "1024"));
-    public static final int DEFAULT_MAXIMUM_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX+"DEFAULT_MAXIMUM_BUCKET_CAPACITY", "16384"));
-    public static final int DEFAULT_MINIMUM_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX+"DEFAULT_MINIMUM_BUCKET_CAPACITY", "16"));
-    public static final int DEFAULT_LOAD_FACTOR = Integer.parseInt(System.getProperty(PROPERTY_PREFIX+"DEFAULT_LOAD_FACTOR", "75"));
-    
+
+    public static final String PROPERTY_PREFIX = HashIndex.class.getName() + ".";
+    public static final int DEFAULT_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX + "DEFAULT_BUCKET_CAPACITY", "1024"));
+    public static final int DEFAULT_MAXIMUM_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX + "DEFAULT_MAXIMUM_BUCKET_CAPACITY", "16384"));
+    public static final int DEFAULT_MINIMUM_BUCKET_CAPACITY = Integer.parseInt(System.getProperty(PROPERTY_PREFIX + "DEFAULT_MINIMUM_BUCKET_CAPACITY", "16"));
+    public static final int DEFAULT_LOAD_FACTOR = Integer.parseInt(System.getProperty(PROPERTY_PREFIX + "DEFAULT_LOAD_FACTOR", "75"));
     private Codec<Key> keyCodec = new ObjectCodec<Key>();
     private Codec<Value> valueCodec = new ObjectCodec<Value>();
     private int initialBucketCapacity = DEFAULT_BUCKET_CAPACITY;
     private int maximumBucketCapacity = DEFAULT_MAXIMUM_BUCKET_CAPACITY;
     private int minimumBucketCapacity = DEFAULT_MINIMUM_BUCKET_CAPACITY;
     private int loadFactor = DEFAULT_LOAD_FACTOR;
-    private boolean deferredEncoding=true;
+    private boolean deferredEncoding = true;
 
     /**
      * Loads an existing hash index from the paged object.
@@ -76,6 +75,14 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
      */
     public Index<Key, Value> create(Paged paged) {
         return createInstance(paged, paged.alloc()).create();
+    }
+
+    public Index<Key, Value> openOrCreate(Paged paged) {
+        if (paged.allocator().isAllocated(0)) {
+            return createInstance(paged, 0).open();
+        } else {
+            return createInstance(paged, paged.alloc()).create();
+        }
     }
 
     private HashIndex<Key, Value> createInstance(Paged paged, int page) {
@@ -213,5 +220,5 @@ public class HashIndexFactory<Key, Value> implements IndexFactory<Key, Value> {
     public void setDeferredEncoding(boolean enable) {
         this.deferredEncoding = enable;
     }
-    
+
 }
