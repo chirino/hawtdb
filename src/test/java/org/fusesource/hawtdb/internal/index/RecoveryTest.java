@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.hawtdb.api;
+package org.fusesource.hawtdb.internal.index;
 
 import org.fusesource.hawtbuf.codec.LongCodec;
 import org.fusesource.hawtbuf.codec.StringCodec;
@@ -26,6 +26,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
+import org.fusesource.hawtdb.api.BTreeIndexFactory;
+import org.fusesource.hawtdb.api.SortedIndex;
+import org.fusesource.hawtdb.api.Transaction;
+import org.fusesource.hawtdb.api.TxPageFile;
+import org.fusesource.hawtdb.api.TxPageFileFactory;
 import static org.junit.Assert.assertEquals;
 
 /**

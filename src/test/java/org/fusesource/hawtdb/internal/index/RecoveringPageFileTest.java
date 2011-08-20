@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.hawtdb.api;
+package org.fusesource.hawtdb.internal.index;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -30,6 +30,10 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Random;
 
+import org.fusesource.hawtdb.api.BTreeIndexFactory;
+import org.fusesource.hawtdb.api.PageFile;
+import org.fusesource.hawtdb.api.PageFileFactory;
+import org.fusesource.hawtdb.api.SortedIndex;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
