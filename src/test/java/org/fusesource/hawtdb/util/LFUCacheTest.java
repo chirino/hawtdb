@@ -39,6 +39,23 @@ public class LFUCacheTest {
         assertEquals(0, cache.frequencyOf("b"));
         
         assertEquals(1, cache.size());
+        
+        assertEquals("a", cache.remove("a"));
+        assertNull(cache.get("a"));
+        assertEquals(0, cache.frequencyOf("a"));
+        
+        assertEquals(0, cache.size());
+    }
+    
+    @Test
+    public void testMaxFrequency() {
+        int max = 100;
+        LFUCache<String, String> cache = new LFUCache<String, String>(max, 0.5f);
+
+        cache.put("" + 0, "" + 0);
+        for (int i = 0; i < max; i++) {
+            assertEquals(""+ 0, cache.get("" + 0));
+        }
     }
 
     @Test
