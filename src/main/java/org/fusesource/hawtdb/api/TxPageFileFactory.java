@@ -21,6 +21,8 @@ import java.io.IOException;
 
 import org.fusesource.hawtdb.internal.page.HawtPageFile;
 import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
+import org.fusesource.hawtdb.internal.page.LFUPageCache;
+import org.fusesource.hawtdb.internal.page.PageCache;
 
 /**
  * A factory to create TxPageFile objects.
@@ -29,13 +31,12 @@ import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
  */
 public class TxPageFileFactory {
 
-    private final PageFileFactory pageFileFactory = new PageFileFactory(); 
+    private final PageFileFactory pageFileFactory = new PageFileFactory();
     private HawtTxPageFile txPageFile;
-    
     protected boolean drainOnClose;
     protected boolean sync = true;
     protected boolean useWorkerThread;
-    private int cacheSize = 1024;
+    private PageCache pageCache = new LFUPageCache(1024, 0.5f);
 
     public TxPageFileFactory() {
         pageFileFactory.setHeaderSize(HawtTxPageFile.FILE_HEADER_SIZE);
@@ -47,21 +48,21 @@ public class TxPageFileFactory {
      * the opened TxPageFile.
      */
     public void open() {
-        if( getFile() ==  null ) {
+        if (getFile() == null) {
             throw new IllegalArgumentException("file property not set");
         }
         boolean existed = getFile().isFile();
         pageFileFactory.open();
         if (txPageFile == null) {
             txPageFile = new HawtTxPageFile(this, (HawtPageFile) pageFileFactory.getPageFile());
-            if( existed ) {
+            if (existed) {
                 txPageFile.recover();
             } else {
                 txPageFile.reset();
             }
         }
     }
-    
+
     /**
      * Closes the previously opened PageFile object.  Subsequent calls to 
      * {@link TxPageFileFactory#getTxPageFile()} will return null.
@@ -69,7 +70,7 @@ public class TxPageFileFactory {
     public void close() throws IOException {
         if (txPageFile != null) {
             txPageFile.close();
-            txPageFile=null;
+            txPageFile = null;
         }
         pageFileFactory.close();
     }
@@ -81,7 +82,7 @@ public class TxPageFileFactory {
     public void setSync(boolean sync) {
         this.sync = sync;
     }
-    
+
     public TxPageFile getTxPageFile() {
         return txPageFile;
     }
@@ -138,11 +139,12 @@ public class TxPageFileFactory {
         pageFileFactory.setPageSize(pageSize);
     }
 
-    public int getCacheSize() {
-        return cacheSize;
+    public PageCache getPageCache() {
+        return pageCache;
     }
 
-    public void setCacheSize(int cacheSize) {
-        this.cacheSize = cacheSize;
+    public void setPageCache(PageCache pageCache) {
+        this.pageCache = pageCache;
     }
+
 }

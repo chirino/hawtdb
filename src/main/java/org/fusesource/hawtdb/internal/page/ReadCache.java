@@ -14,31 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fusesource.hawtdb.internal.index;
+package org.fusesource.hawtdb.internal.page;
 
-import org.fusesource.hawtbuf.codec.FixedBufferCodec;
-import org.fusesource.hawtbuf.codec.LongCodec;
-import org.fusesource.hawtdb.api.BTreeIndexFactory;
-import org.fusesource.hawtdb.api.Index;
-import org.fusesource.hawtdb.api.Transaction;
-import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtdb.api.PageFile;
+import org.fusesource.hawtdb.api.PagedAccessor;
 
 /**
- * 
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class BTreeIndexBenchmark extends IndexBenchmark {
+public class ReadCache {
 
-    public BTreeIndexBenchmark() {
-        this.benchmark.setSamples(10);
-    }
-    
-    protected Index<Long, Buffer> createIndex(Transaction tx) {
-        BTreeIndexFactory<Long, Buffer> factory = new BTreeIndexFactory<Long, Buffer>();
-        factory.setKeyCodec(LongCodec.INSTANCE);
-        factory.setValueCodec(new FixedBufferCodec(DATA.length));
-        return factory.create(tx);
+    private final PageFile pageFile;
+    private final PageCache cache;
+
+    public ReadCache(PageFile pageFile, PageCache<Integer, Object> cache) {
+        this.pageFile = pageFile;
+        this.cache = cache;
     }
 
-   
+    @SuppressWarnings(value = "unchecked")
+    public <T> T cacheLoad(PagedAccessor<T> marshaller, int pageId) {
+        T rc = (T) cache.get(pageId);
+        if (rc == null) {
+            rc = marshaller.load(pageFile, pageId);
+            if (rc != null) {
+                cache.put(pageId, rc);
+            }
+        }
+        return rc;
+    }
+
+    public PageCache cache() {
+        return cache;
+    }
 }

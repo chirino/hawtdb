@@ -148,7 +148,7 @@ final class HawtTransaction implements Transaction {
         // No?  Then ask the snapshot to load the object.
         T rc = snapshot().getTracker().get(marshaller, page);
         if( rc == null ) {
-            rc = parent.readCache.cacheLoad(marshaller, page);
+            rc = parent.readCache().cacheLoad(marshaller, page);
         }
         return rc;
     }
