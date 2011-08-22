@@ -49,7 +49,8 @@ public class LFUCache<Key, Value> {
     }
 
     synchronized public void put(Key k, Value v) {
-        if (!cache.containsKey(k)) {
+        CacheNode<Key, Value> currentNode = cache.get(k);
+        if (currentNode == null) {
             if (cache.size() == maxCacheSize) {
                 doEviction();
             }
@@ -62,6 +63,8 @@ public class LFUCache<Key, Value> {
             }
             nodes.add(cacheNode);
             cache.put(k, cacheNode);
+        } else {
+            cache.put(k, new CacheNode<Key, Value>(k, v, currentNode.frequency));
         }
     }
 

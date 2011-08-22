@@ -23,35 +23,39 @@ import static org.junit.Assert.*;
  * @author Sergio Bossa
  */
 public class LFUCacheTest {
-    
+
     @Test
     public void testBasicOperations() {
         LFUCache<String, String> cache = new LFUCache<String, String>(100, 0.5f);
 
         cache.put("a", "a");
         assertEquals(1, cache.frequencyOf("a"));
-        
+
         String v = cache.get("a");
         assertEquals("a", v);
         assertEquals(2, cache.frequencyOf("a"));
-        
+
         assertNull(cache.get("b"));
         assertEquals(0, cache.frequencyOf("b"));
-        
+
         assertEquals(1, cache.size());
-        
+
         assertEquals("a", cache.remove("a"));
         assertNull(cache.get("a"));
         assertEquals(0, cache.frequencyOf("a"));
-        
+
         assertEquals(0, cache.size());
-        
+
         cache.put("a", "a");
+        assertEquals("a", cache.get("a"));
+        cache.put("a", "b");
+        assertEquals("b", cache.get("a"));
+
         cache.clear();
-        
+
         assertEquals(0, cache.size());
     }
-    
+
     @Test
     public void testMaxFrequencyOverflow() {
         int max = 100;
@@ -62,7 +66,7 @@ public class LFUCacheTest {
             assertEquals(Integer.valueOf(0), cache.get(0));
         }
     }
-    
+
     @Test
     public void testElementsWithSameMaxFrequency() {
         int max = 2;
