@@ -31,7 +31,7 @@ import org.fusesource.hawtbuf.codec.LongCodec;
 public class HashIndexBenchmark extends IndexBenchmark {
 
     public HashIndexBenchmark() {
-        this.benchmark.setSamples(5);
+        this.benchmark.setSamples(10);
     }
     
     protected Index<Long, Buffer> createIndex(Transaction tx) {
