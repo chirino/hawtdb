@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.fusesource.hawtdb.internal.page.LFUPageCache;
 import static org.junit.Assert.assertEquals;
 
 
@@ -46,7 +47,7 @@ public class BTreeCacheTest {
         TxPageFileFactory rc = new TxPageFileFactory();
         rc.setFile(new File("target/test-data/" + getClass().getName() + ".db"));
         rc.setPageSize((short) 512);
-        rc.setCacheSize(1000);
+        rc.setPageCache(new LFUPageCache(1000, 0.5f));
         return rc;
     }
 
