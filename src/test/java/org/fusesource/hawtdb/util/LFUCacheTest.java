@@ -45,17 +45,41 @@ public class LFUCacheTest {
         assertEquals(0, cache.frequencyOf("a"));
         
         assertEquals(0, cache.size());
+        
+        cache.put("a", "a");
+        cache.clear();
+        
+        assertEquals(0, cache.size());
     }
     
     @Test
-    public void testMaxFrequency() {
+    public void testMaxFrequencyOverflow() {
         int max = 100;
-        LFUCache<String, String> cache = new LFUCache<String, String>(max, 0.5f);
+        LFUCache<Integer, Integer> cache = new LFUCache<Integer, Integer>(max, 0.5f);
 
-        cache.put("" + 0, "" + 0);
+        cache.put(0, 0);
         for (int i = 0; i < max; i++) {
-            assertEquals(""+ 0, cache.get("" + 0));
+            assertEquals(Integer.valueOf(0), cache.get(0));
         }
+    }
+    
+    @Test
+    public void testElementsWithSameMaxFrequency() {
+        int max = 2;
+        LFUCache<Integer, Integer> cache = new LFUCache<Integer, Integer>(max, 0.5f);
+
+        cache.put(0, 0);
+        cache.put(1, 1);
+        // Reach max frequency:
+        cache.get(0);
+        cache.get(1);
+        // Overflow for 0 hence put it "higher" than 1.
+        cache.get(0);
+        // Put another element hence verify 1 has been evicted, not 0:
+        cache.put(2, 2);
+        assertEquals(Integer.valueOf(0), cache.get(0));
+        assertEquals(Integer.valueOf(2), cache.get(2));
+        assertEquals(2, cache.size());
     }
 
     @Test

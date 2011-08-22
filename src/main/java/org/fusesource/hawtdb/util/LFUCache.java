@@ -6,6 +6,24 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
+ * LFU cache implementation based on http://dhruvbird.com/lfu.pdf, with some notable differences:
+ * <ul>
+ * <li>
+ * Frequency list is stored as an array with no next/prev pointers between nodes: looping over the array should be faster and more CPU-cache friendly than
+ * using an ad-hoc linked-pointers structure.
+ * </li>
+ * <li>
+ * The max frequency is capped at the cache size to avoid creating more and more frequency list entries, and all elements residing in the max frequency entry 
+ * are re-positioned in the frequency entry linked set in order to put most recently accessed elements ahead of less recently ones, 
+ * which will be collected sooner.
+ * </li>
+ * <li>
+ * The eviction factor determines how many elements (more specifically, the percentage of) will be evicted.
+ * </li>
+ * </ul>
+ * As a consequence, this cache runs in *amortized* O(1) time (considering the worst case of having the lowest frequency at 0 and having to evict all
+ * elements).
+ * 
  * @author Sergio Bossa
  */
 public class LFUCache<Key, Value> {
@@ -59,10 +77,8 @@ public class LFUCache<Key, Value> {
                     newNodes = new LinkedHashSet<CacheNode<Key, Value>>();
                     frequencyList[nextFrequency] = newNodes;
                 }
-                CacheNode<Key, Value> updatedNode = new CacheNode<Key, Value>(k, currentNode.v, nextFrequency);
-                currentNodes.remove(currentNode);
-                newNodes.add(updatedNode);
-                cache.put(k, updatedNode);
+                moveToNextFrequency(currentNode, nextFrequency, currentNodes, newNodes);
+                cache.put(k, currentNode);
                 if (lowestFrequency == currentFrequency && currentNodes.isEmpty()) {
                     lowestFrequency = nextFrequency;
                     frequencyList[currentFrequency] = null;
@@ -70,6 +86,7 @@ public class LFUCache<Key, Value> {
                     frequencyList[currentFrequency] = null;
                 }
             } else {
+                // Hybrid with LRU: put most recently accessed ahead of others:
                 LinkedHashSet<CacheNode<Key, Value>> nodes = frequencyList[currentFrequency];
                 nodes.remove(currentNode);
                 nodes.add(currentNode);
@@ -107,6 +124,14 @@ public class LFUCache<Key, Value> {
         }
     }
 
+    synchronized public void clear() {
+        for (int i = 0; i <= maxFrequency; i++) {
+            frequencyList[i] = null;
+        }
+        lowestFrequency = 0;
+        cache.clear();
+    }
+
     synchronized public int size() {
         return cache.size();
     }
@@ -133,6 +158,12 @@ public class LFUCache<Key, Value> {
         }
     }
 
+    private void moveToNextFrequency(CacheNode<Key, Value> currentNode, int nextFrequency, LinkedHashSet<CacheNode<Key, Value>> currentNodes, LinkedHashSet<CacheNode<Key, Value>> newNodes) {
+        currentNodes.remove(currentNode);
+        newNodes.add(currentNode);
+        currentNode.frequency = nextFrequency;
+    }
+
     private void findNextLowestFrequency() {
         while (lowestFrequency < maxFrequency && frequencyList[lowestFrequency] == null) {
             lowestFrequency++;
@@ -146,7 +177,7 @@ public class LFUCache<Key, Value> {
 
         public final Key k;
         public final Value v;
-        public final int frequency;
+        public int frequency;
 
         public CacheNode(Key k, Value v, int frequency) {
             this.k = k;
