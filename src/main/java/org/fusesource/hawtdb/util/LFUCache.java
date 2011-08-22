@@ -54,17 +54,17 @@ public class LFUCache<Key, Value> {
             if (cache.size() == maxCacheSize) {
                 doEviction();
             }
-            CacheNode<Key, Value> cacheNode = new CacheNode(k, v, 0);
             LinkedHashSet<CacheNode<Key, Value>> nodes = frequencyList[0];
             if (nodes == null) {
                 nodes = new LinkedHashSet<CacheNode<Key, Value>>();
                 frequencyList[0] = nodes;
                 lowestFrequency = 0;
             }
-            nodes.add(cacheNode);
-            cache.put(k, cacheNode);
+            currentNode = new CacheNode(k, v, 0);
+            nodes.add(currentNode);
+            cache.put(k, currentNode);
         } else {
-            cache.put(k, new CacheNode<Key, Value>(k, v, currentNode.frequency));
+            currentNode.v = v;
         }
     }
 
@@ -179,7 +179,7 @@ public class LFUCache<Key, Value> {
     private static class CacheNode<Key, Value> {
 
         public final Key k;
-        public final Value v;
+        public Value v;
         public int frequency;
 
         public CacheNode(Key k, Value v, int frequency) {
