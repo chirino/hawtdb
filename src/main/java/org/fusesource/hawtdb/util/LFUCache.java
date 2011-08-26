@@ -127,7 +127,7 @@ public class LFUCache<Key, Value> {
     
     private void initFrequencyList() {
         for (int i = 0; i <= maxFrequency; i++) {
-            frequencyList[i] = new LinkedHashSet<CacheNode<Key, Value>>(maxCacheSize + 1, 1.0f);
+            frequencyList[i] = new LinkedHashSet<CacheNode<Key, Value>>();
         }
     }
 
