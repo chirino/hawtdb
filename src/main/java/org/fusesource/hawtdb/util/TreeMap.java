@@ -39,8 +39,8 @@ public class TreeMap<K, V> implements Serializable {
     private static final boolean RED = false;
     private static final boolean BLACK = true;
 
-    private volatile int count;
-    private volatile TreeEntry<K, V> root;
+    private int count;
+    private TreeEntry<K, V> root;
     private final Comparator<? super K> comparator;
 
     public TreeMap() {
