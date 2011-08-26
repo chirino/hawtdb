@@ -102,6 +102,13 @@
       <url>http://hiramchirino.com</url>
       <timezone>GMT-5</timezone>
     </developer>
+    <developer>
+      <id>sbtourist</id>
+      <name>Sergio Bossa</name>
+      <email>sergio.bossa@gmail.com</email>
+      <url>https://github.com/sbtourist</url>
+      <timezone>GMT+1</timezone>
+    </developer>
   </developers>
 
   <build>
