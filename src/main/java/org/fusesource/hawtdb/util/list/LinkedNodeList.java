@@ -26,8 +26,8 @@ import java.util.Iterator;
  */
 public class LinkedNodeList<T extends LinkedNode<T>> implements Iterable<T> {
 
-    T head;
-    int size;
+    protected volatile T head;
+    protected volatile int size;
 
     public LinkedNodeList() {
     }
