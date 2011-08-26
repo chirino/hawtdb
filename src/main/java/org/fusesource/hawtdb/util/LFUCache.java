@@ -46,6 +46,7 @@ public class LFUCache<Key, Value> {
         this.maxFrequency = maxCacheSize - 1;
         this.maxCacheSize = maxCacheSize;
         this.evictionFactor = evictionFactor;
+        initFrequencyList();
     }
 
     synchronized public void put(Key k, Value v) {
@@ -55,14 +56,10 @@ public class LFUCache<Key, Value> {
                 doEviction();
             }
             LinkedHashSet<CacheNode<Key, Value>> nodes = frequencyList[0];
-            if (nodes == null) {
-                nodes = new LinkedHashSet<CacheNode<Key, Value>>();
-                frequencyList[0] = nodes;
-                lowestFrequency = 0;
-            }
             currentNode = new CacheNode(k, v, 0);
             nodes.add(currentNode);
             cache.put(k, currentNode);
+            lowestFrequency = 0;
         } else {
             currentNode.v = v;
         }
@@ -76,17 +73,10 @@ public class LFUCache<Key, Value> {
                 int nextFrequency = currentFrequency + 1;
                 LinkedHashSet<CacheNode<Key, Value>> currentNodes = frequencyList[currentFrequency];
                 LinkedHashSet<CacheNode<Key, Value>> newNodes = frequencyList[nextFrequency];
-                if (newNodes == null) {
-                    newNodes = new LinkedHashSet<CacheNode<Key, Value>>();
-                    frequencyList[nextFrequency] = newNodes;
-                }
                 moveToNextFrequency(currentNode, nextFrequency, currentNodes, newNodes);
                 cache.put(k, currentNode);
                 if (lowestFrequency == currentFrequency && currentNodes.isEmpty()) {
                     lowestFrequency = nextFrequency;
-                    frequencyList[currentFrequency] = null;
-                } else if (currentNodes.isEmpty()) {
-                    frequencyList[currentFrequency] = null;
                 }
             } else {
                 // Hybrid with LRU: put most recently accessed ahead of others:
@@ -101,14 +91,10 @@ public class LFUCache<Key, Value> {
     }
 
     synchronized public Value remove(Key k) {
-        CacheNode<Key, Value> currentNode = cache.get(k);
+        CacheNode<Key, Value> currentNode = cache.remove(k);
         if (currentNode != null) {
             LinkedHashSet<CacheNode<Key, Value>> nodes = frequencyList[currentNode.frequency];
             nodes.remove(currentNode);
-            cache.remove(k);
-            if (nodes.isEmpty()) {
-                frequencyList[currentNode.frequency] = null;
-            }
             if (lowestFrequency == currentNode.frequency) {
                 findNextLowestFrequency();
             }
@@ -129,14 +115,20 @@ public class LFUCache<Key, Value> {
 
     synchronized public void clear() {
         for (int i = 0; i <= maxFrequency; i++) {
-            frequencyList[i] = null;
+            frequencyList[i].clear();
         }
-        lowestFrequency = 0;
         cache.clear();
+        lowestFrequency = 0;
     }
 
     synchronized public int size() {
         return cache.size();
+    }
+    
+    private void initFrequencyList() {
+        for (int i = 0; i <= maxFrequency; i++) {
+            frequencyList[i] = new LinkedHashSet<CacheNode<Key, Value>>(maxCacheSize + 1, 1.0f);
+        }
     }
 
     private void doEviction() {
@@ -154,7 +146,6 @@ public class LFUCache<Key, Value> {
                     cache.remove(node.k);
                 }
                 if (!it.hasNext()) {
-                    frequencyList[lowestFrequency] = null;
                     findNextLowestFrequency();
                 }
             }
@@ -168,10 +159,10 @@ public class LFUCache<Key, Value> {
     }
 
     private void findNextLowestFrequency() {
-        while (lowestFrequency < maxFrequency && frequencyList[lowestFrequency] == null) {
+        while (lowestFrequency <= maxFrequency && frequencyList[lowestFrequency].isEmpty()) {
             lowestFrequency++;
         }
-        if (lowestFrequency == maxFrequency) {
+        if (lowestFrequency > maxFrequency) {
             lowestFrequency = 0;
         }
     }
