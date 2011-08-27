@@ -1,6 +1,38 @@
 ![HawtDB](http://hawtdb.fusesource.org/images/project-logo.png)
 ===============================================================
 
+[HawtDB 1.6](http://hawtdb.fusesource.org/maven/1.6), released 2011-08-27
+-------------------------------------------------------------------------
+
+* Minor change to LFUCache for less memory usage.
+* Added volatiles to linked node, list and sequence.
+* Added NoOpPageCache.
+* Squeezed out some more performance improvements from LFUCache by avoiding to recreate frequency list nodes.
+* Removed journal apis (moved to the HawtJournal project).
+* Refactored page/read cache implementation to allow for cache pluggability.
+* Optimized put by avoiding reallocating nodes on replace.
+* Added clear method + other minor improvements.
+* Fixed bugs in LFUCache, added remove operation, and managed maxFrequency overflow with a linked set based repositioning.
+* LFU cache with O(1) complexity.
+* Updated main documentation page.
+* Improved multi-index apis by avoiding passing the paged object multiple times.
+* Implemented multi-index api.
+* Implemented openOrCreate api.
+* Fixed GrowIssueTest.
+* Improved HashIndex tests and added concurrency tests.
+* Fixed HashIndex bug: HashIndex.Buckets now doesn't hold a reference to the index anymore, so that they can be (page)-cached safely.
+* Ignored GrowIssueTest (should it fail or succeed?).
+* Added volatile keyword to all shared instance attributes which are read in different threads.
+* Fixed HawtTransaction rollback: now correctly freeing local pages rather than parent (possibly updated in other transactions) pages.
+* Re-added buckets' pages deallocation.
+* Fixed sync batch bug: batch performing was apparently placed in wrong order.
+* Minor fix to HashIndex paged accessor exception handling.
+* Fixed HashIndex bugs affecting header read/write operations and capacity resize.
+* PageFiles store their free page list by default.  They can also be opened in a read only mode.
+* upgrade hawtbuf version.
+* Osgi metadata cleanup.
+* cleaning up how page file gets closed
+
 [HawtDB 1.5](http://hawtdb.fusesource.org/maven/1.5), released 2010-10-21
 -------------------------------------------------------------------------
 
