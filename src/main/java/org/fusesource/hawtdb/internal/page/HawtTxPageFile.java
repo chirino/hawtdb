@@ -258,7 +258,7 @@ public final class HawtTxPageFile implements TxPageFile {
     public ReadCache readCache() {
         return readCache;
     }
-    
+
     public void close() {
         if (worker != null) {
             final CountDownLatch done = new CountDownLatch(1);
@@ -857,7 +857,7 @@ public final class HawtTxPageFile implements TxPageFile {
             }
 
             // Open the snapshot
-            return new Snapshot(this, tracker, storedBatches).open();
+            return new Snapshot(this, tracker, storedBatches, openBatch).open();
         }
     }
 
@@ -893,4 +893,5 @@ public final class HawtTxPageFile implements TxPageFile {
         trace("storing file header: %s", header);
         file.write(0, header.encode());
     }
+
 }
