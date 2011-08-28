@@ -28,7 +28,7 @@
   <groupId>org.fusesource.hawtdb</groupId>
   <artifactId>hawtdb-project</artifactId>
   <packaging>pom</packaging>
-  <version>1.6</version>
+  <version>1.7-SNAPSHOT</version>
 
   <name>HawtDB</name>
   <description>
