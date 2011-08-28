@@ -20,14 +20,14 @@
   <parent>
     <groupId>org.fusesource</groupId>
     <artifactId>fusesource-pom</artifactId>
-    <version>1.0</version>
+    <version>1.8</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.fusesource.hawtdb</groupId>
-  <artifactId>hawtdb</artifactId>
-  <packaging>bundle</packaging>
+  <artifactId>hawtdb-project</artifactId>
+  <packaging>pom</packaging>
   <version>1.6-SNAPSHOT</version>
 
   <name>HawtDB</name>
@@ -38,13 +38,17 @@
   <properties>
     <forge-project-id>hawtdb</forge-project-id>
     <forge-project-id-uc>HAWTDB</forge-project-id-uc>
-    <release-altGitURL>scm:git:git@github.com:fusesource/hawtdb.git</release-altGitURL>
 
     <hawtbuf-version>1.4</hawtbuf-version>
     <commons-logging-version>1.1</commons-logging-version>
     <junit-version>4.7</junit-version>
     <log4j-version>1.2.14</log4j-version>
   </properties>
+
+  <modules>
+    <module>hawtdb</module>
+    <module>hawtdb-website</module>
+  </modules>
 
   <url>http://${forge-project-id}.fusesource.org/</url>
   <inceptionYear>2009</inceptionYear>
@@ -81,8 +85,7 @@
   
   <scm>
     <connection>scm:git:git://forge.fusesource.com/${forge-project-id}.git</connection>
-    <!-- Work around for issue: http://jira.codehaus.org/browse/SCM-444 -->
-    <developerConnection>${release-altGitURL}</developerConnection>
+    <developerConnection>scm:git:git@github.com:fusesource/hawtdb.git</developerConnection>
     <url>http://github.com/chirino/hawtdb/tree/master</url>
   </scm>
 
@@ -123,28 +126,6 @@
     </extensions>
 
     <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.3.4</version>
-        <extensions>true</extensions>
-        <inherited>true</inherited>
-        <configuration>
-          <instructions>
-            <Implementation-Title>${project.description}</Implementation-Title>
-            <Implementation-Version>${project.version}</Implementation-Version>
-            <Bundle-Name>${project.artifactId}</Bundle-Name>
-            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package>{local-packages};version=${project.version};-noimport:=true</Export-Package>
-            <Import-Package>*</Import-Package>
-            <Private-Package>!*</Private-Package>
-            <_versionpolicy-impl>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy-impl>
-            <_versionpolicy-uses>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy-uses>
-            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-            <_failok>false</_failok>
-          </instructions>
-        </configuration>
-      </plugin>
       
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -165,12 +146,6 @@
           <parallel>methods</parallel>
           <threadCount>16</threadCount>
         </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>2.1.1</version>
       </plugin>
 
       <plugin>
@@ -331,51 +306,4 @@
 
   </profiles>
 
-
-  <dependencies>
-    <dependency>
-      <groupId>org.fusesource.hawtbuf</groupId>
-      <artifactId>hawtbuf</artifactId>
-      <version>${hawtbuf-version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>${commons-logging-version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>avalon-framework</groupId>
-          <artifactId>avalon-framework</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>logkit</groupId>
-          <artifactId>logkit</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>servlet-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>${log4j-version}</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
-  
 </project>
