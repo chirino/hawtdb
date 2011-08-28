@@ -33,6 +33,8 @@ final class SnapshotTracker {
     final Batch parentBatch;
     final Commit parentCommit;
     final long headRevision;
+    /** The number of times this snapshot has been opened. */
+    protected volatile int snapshots;
     
     public SnapshotTracker(Batch parentBatch, Commit parentCommit) {
         this.parentBatch = parentBatch;
@@ -40,9 +42,6 @@ final class SnapshotTracker {
         Commit lastEntry = this.parentBatch.commits.getTail();
         this.headRevision = (lastEntry == null ? this.parentBatch.head : lastEntry.getHeadRevision())+1;
     }
-
-    /** The number of times this snapshot has been opened. */
-    protected int snapshots;
     
     public String toString() { 
         return "{ references: "+this.snapshots+" }";

@@ -37,11 +37,13 @@ final class Snapshot {
     private final HawtTxPageFile parent;
     private final SnapshotTracker tracker;
     private final Batch base;
+    private final Batch latest;
     
-    public  Snapshot(HawtTxPageFile hawtPageFile, SnapshotTracker tracker, Batch base) {
+    public  Snapshot(HawtTxPageFile hawtPageFile, SnapshotTracker tracker, Batch base, Batch latest) {
         parent = hawtPageFile;
         this.tracker = tracker;
         this.base = base;
+        this.latest = latest;
     }
     
     public Snapshot open() {
@@ -49,10 +51,11 @@ final class Snapshot {
         Batch cur = base;
         while( true ) {
             cur.snapshots++;
-            if(cur == tracker.parentBatch) {
+            if(cur == latest) {
                 break;
             }
             cur = cur.getNext();
+            
         }
         return this;
     }
@@ -63,7 +66,7 @@ final class Snapshot {
             Batch cur = base;
             while( true ) {
                 cur.snapshots--;
-                if(cur == tracker.parentBatch) {
+                if(cur == latest) {
                     break;
                 }
                 cur = cur.getNext();
