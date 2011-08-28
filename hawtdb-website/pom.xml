@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.fusesource.hawtdb</groupId>
     <artifactId>hawtdb-project</artifactId>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6</version>
   </parent>
   
   <artifactId>hawtdb-website</artifactId>
@@ -79,7 +79,7 @@
     <dependency>
       <groupId>org.fusesource.hawtdb</groupId>
       <artifactId>hawtdb</artifactId>
-      <version>1.6-SNAPSHOT</version>
+      <version>1.6</version>
       <classifier>javadoc</classifier> 
       <scope>test</scope>
     </dependency>
