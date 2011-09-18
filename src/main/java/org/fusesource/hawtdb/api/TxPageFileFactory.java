@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.fusesource.hawtdb.internal.page.HawtPageFile;
 import org.fusesource.hawtdb.internal.page.HawtTxPageFile;
-import org.fusesource.hawtdb.internal.page.LFUPageCache;
 import org.fusesource.hawtdb.internal.page.PageCache;
+import org.fusesource.hawtdb.internal.page.ThreadLocalLFUPageCache;
 
 /**
  * A factory to create TxPageFile objects.
@@ -36,7 +36,7 @@ public class TxPageFileFactory {
     protected boolean drainOnClose;
     protected boolean sync = true;
     protected boolean useWorkerThread;
-    private PageCache pageCache = new LFUPageCache(1024, 0.5f);
+    private PageCache pageCache = new ThreadLocalLFUPageCache(1024, 0.5f);
 
     public TxPageFileFactory() {
         pageFileFactory.setHeaderSize(HawtTxPageFile.FILE_HEADER_SIZE);

@@ -49,7 +49,7 @@ public class LFUCache<Key, Value> {
         initFrequencyList();
     }
 
-    synchronized public void put(Key k, Value v) {
+    public void put(Key k, Value v) {
         CacheNode<Key, Value> currentNode = cache.get(k);
         if (currentNode == null) {
             if (cache.size() == maxCacheSize) {
@@ -65,7 +65,7 @@ public class LFUCache<Key, Value> {
         }
     }
 
-    synchronized public Value get(Key k) {
+    public Value get(Key k) {
         CacheNode<Key, Value> currentNode = cache.get(k);
         if (currentNode != null) {
             int currentFrequency = currentNode.frequency;
@@ -90,7 +90,7 @@ public class LFUCache<Key, Value> {
         }
     }
 
-    synchronized public Value remove(Key k) {
+    public Value remove(Key k) {
         CacheNode<Key, Value> currentNode = cache.remove(k);
         if (currentNode != null) {
             LinkedHashSet<CacheNode<Key, Value>> nodes = frequencyList[currentNode.frequency];
@@ -104,7 +104,7 @@ public class LFUCache<Key, Value> {
         }
     }
 
-    synchronized public int frequencyOf(Key k) {
+    public int frequencyOf(Key k) {
         CacheNode<Key, Value> node = cache.get(k);
         if (node != null) {
             return node.frequency + 1;
@@ -113,7 +113,7 @@ public class LFUCache<Key, Value> {
         }
     }
 
-    synchronized public void clear() {
+    public void clear() {
         for (int i = 0; i <= maxFrequency; i++) {
             frequencyList[i].clear();
         }
@@ -121,7 +121,7 @@ public class LFUCache<Key, Value> {
         lowestFrequency = 0;
     }
 
-    synchronized public int size() {
+    public int size() {
         return cache.size();
     }
     

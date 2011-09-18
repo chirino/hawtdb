@@ -13,23 +13,23 @@ public class LFUPageCache<Integer, Value> implements PageCache<Integer, Value> {
         cache = new LFUCache<Integer, Value>(maxCacheSize, evictionFactor);
     }
 
-    public void put(Integer k, Value v) {
+    synchronized public void put(Integer k, Value v) {
         cache.put(k, v);
     }
 
-    public Value get(Integer k) {
+    synchronized public Value get(Integer k) {
         return cache.get(k);
     }
 
-    public Value remove(Integer k) {
+    synchronized public Value remove(Integer k) {
         return cache.remove(k);
     }
 
-    public void clear() {
+    synchronized public void clear() {
         cache.clear();
     }
 
-    public int size() {
+    synchronized public int size() {
         return cache.size();
     }
 }
