@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import static org.fusesource.hawtdb.internal.index.Logging.debug;
 
 /**
@@ -251,10 +253,12 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         int active;
         int capacity;
         int[] bucketsIndex;
-        
+
         int increaseThreshold;
         int decreaseThreshold;
 
+        final ConcurrentMap<Integer, SortedIndex<Key, Value>> buckets = new ConcurrentHashMap<Integer, SortedIndex<Key, Value>>();
+        
         private void calcThresholds(HashIndex<Key,Value> index) {
             increaseThreshold = (capacity * index.loadFactor)/100;
             decreaseThreshold = (capacity * index.loadFactor * index.loadFactor ) / 20000;
@@ -278,6 +282,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         }
         
         public void clear(HashIndex<Key,Value> index) {
+            this.buckets.clear();
             for (int i = 0; i < index.buckets.capacity; i++) {
                 index.buckets.bucket(index, i).clear();
             }
@@ -286,16 +291,28 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         }
         
         SortedIndex<Key,Value> bucket(HashIndex<Key,Value> index, int bucket) {
-            return index.BIN_FACTORY.open(index.paged, bucketsIndex[bucket]);
+            return getOrOpen(index, bucketsIndex[bucket]);
         }
 
         SortedIndex<Key,Value> bucket(HashIndex<Key,Value> index, Key key) {
             int i = index(key);
-            return index.BIN_FACTORY.open(index.paged, bucketsIndex[i]);
+            return getOrOpen(index, bucketsIndex[i]);
         }
 
         int index(Key x) {
             return Math.abs(x.hashCode()%capacity);
+        }
+        
+        private SortedIndex<Key,Value> getOrOpen(HashIndex<Key,Value> hash, int location) {
+            SortedIndex<Key,Value> result = buckets.get(location);
+            if (result == null) {
+                SortedIndex<Key,Value> bin = hash.BIN_FACTORY.open(hash.paged, location);
+                result = buckets.putIfAbsent(location, bin);
+                if (result == null) {
+                    result = bin;
+                }
+            }
+            return result;
         }
         
         @Override
